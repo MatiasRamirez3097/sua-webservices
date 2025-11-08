@@ -3,11 +3,11 @@ import {Footer, Navbar} from "../components";
 
 const Layout = () => {
     return (
-        <dix>
+        <div>
             <Navbar />
             <Outlet />
             <Footer />
-        </dix>
+        </div>
     )
 }
 
