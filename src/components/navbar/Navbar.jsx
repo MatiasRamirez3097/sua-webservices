@@ -1,12 +1,14 @@
+import Logo from "../../assets/Municipalidad.jpg"
+
 const Navbar = () => {
     return (
-        <nav className="bg-gray-800 text-white">
+        <nav className="bg-gray-800 text-white fixed top-0 left-0 w-full shadow-md z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center h-16">
+                <div className="flex justify-between items-center h-23">
                     <div className="flex items-center space-x-3">
                         <img
-                            src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
-                            className="h-8 w-8"
+                            src={Logo}
+                            className="h-22 w-auto object-contain"
                         />
                         <span className="font-semibold text-xl tracking-wide">SUA Website</span>
                     </div>
