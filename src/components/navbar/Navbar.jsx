@@ -1,4 +1,4 @@
-import Logo from "../../assets/Municipalidad.jpg"
+import Logo from "../../assets/Municipalidad_sin_fondo.png"
 
 const Navbar = () => {
     return (
