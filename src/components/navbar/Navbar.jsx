@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Logo from "../../assets/Municipalidad_sin_fondo.png"
 
 const Navbar = () => {
@@ -13,10 +14,15 @@ const Navbar = () => {
                         <span className="font-semibold text-xl tracking-wide">SUA Website</span>
                     </div>
                     <div className="hidden md:flex items-center space-x-10">
-                        <a href="#" className="hover:text-indigo-400 transition-colors">Inicio</a>
-                        <a href="#" className="hover:text-indigo-400 transition-colors">Servicios</a>
-                        <a href="#" className="hover:text-indigo-400 transition-colors">Contacto</a>
-                        <a href="#" className="hover:text-indigo-400 transition-colors">Acerca</a>
+                        <Link to="/home" className="hover:text-indigo-400 transition-colors">
+                            Home
+                        </Link>
+                        <Link to="/intervenciones" className="hover:text-indigo-400 transition-colors"> 
+                            Intervenciones 
+                        </Link>
+                        <Link to="/resoluciones" className="hover:text-indigo-400 transition-colors">
+                            Resoluciones
+                        </Link>
                     </div>
                     <div className="md:hidden">
                         <button id="menu-boton" className="focus:outline-none">
