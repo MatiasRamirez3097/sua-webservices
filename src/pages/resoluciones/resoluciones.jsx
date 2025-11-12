@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Papa from 'papaparse'; // Importamos papaparse
-import CsvProcessor from "../../utils/CsvProcessor";
+import CsvProcessor from "../../components/csv/CsvProcessor";
 
 const Resoluciones = () => {
     const [file, setFile] = useState(null);
