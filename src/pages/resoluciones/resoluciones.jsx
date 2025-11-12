@@ -92,7 +92,6 @@ const Resoluciones = () => {
 
     return (
         <div>
-            <h5>Resoluciones!</h5>
             <CsvProcessor 
                 file={file}
                 handleFileChange={handleFileChange}

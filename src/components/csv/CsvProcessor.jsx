@@ -1,21 +1,21 @@
 const CsvProcessor = ({file,jsonData,handleFileChange,handleParse,handleProcessAPI,status,headers}) => {
 	return (
 		// Contenedor principal
-		<div className="p-8 mt-20 bg-gray-800 min-h-0">
+		<div className="border border-gray-300 p-10 bg-gray-800 min-h-0">
 
 			{/* Título principal */}
-			<h2 className="text-2xl font-bold mb-6 text-white text-center">
+			<h2 className="text-2xl font-bold text-white text-center p-15">
 				Procesador de CSV
 			</h2>
 
 			{/* Sección para subir archivo */}
-			<div className="flex flex-col items-center gap-4 mt-4">
+			<div className="flex flex-col items-center p-5">
                 <div className="flex flex-col items-center gap-2">
                     {/*label actua como boton*/}
                     <label htmlFor="file-upload" className="bg-indigo-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-indigo-600 transition">
                         Seleccionar archivo
                     </label>
-				    {/* 📂 Input de archivo, oculto  */}
+				    {/* Input de archivo, oculto  */}
 				    <input
                         id="file-upload"
 					    type="file"
@@ -24,11 +24,11 @@ const CsvProcessor = ({file,jsonData,handleFileChange,handleParse,handleProcessA
 					    className="hidden"
 				    />
                     {file ? (
-                        <p className="p-3 text-sm text-white">{file.name}</p>
+                        <p className="p-15 text-sm text-white">{file.name}</p>
                     ) : (
-                        <p className="p-3 text-sm text-gray-400 italic">Ningún archivo seleccionado</p>
+                        <p className="p-15 text-sm text-gray-400 italic">Ningún archivo seleccionado</p>
                     )}
-				    {/* 🔘 Botón de cargar: cambia color si hay archivo */}
+				    {/* Botón de cargar: cambia color si hay archivo */}
 				    <button
 					    onClick={handleParse}
 					    disabled={!file}
@@ -52,11 +52,11 @@ const CsvProcessor = ({file,jsonData,handleFileChange,handleParse,handleProcessA
 						Datos del CSV
 					</h3>
 
-					{/* 🧩 Contenedor de tabla con scroll horizontal y sombra */}
+					{/* Contenedor de tabla con scroll horizontal y sombra */}
 					<div className="overflow-x-auto rounded-lg shadow">
 						<table className="w-full border text-center border-gray-300 border-collapse rounded-lg overflow-hidden">
 							
-							{/* 🧠 Encabezados: fondo gris y texto en mayúscula */}
+							{/* Encabezados: fondo gris y texto en mayúscula */}
 							<thead className="bg-gray-400 text-black">
 								<tr>
 									{headers.map((header) => (
@@ -87,10 +87,10 @@ const CsvProcessor = ({file,jsonData,handleFileChange,handleParse,handleProcessA
 						</table>
 					</div>
 
-					{/* ⚙️ Sección inferior: botón de procesar + estado actual */}
+					{/* Sección inferior: botón de procesar + estado actual */}
 					<div className="mt-8 text-center">
 
-						{/* 🟢 Botón verde para procesar con hover más oscuro */}
+						{/* Botón verde para procesar con hover más oscuro */}
 						<button
 							onClick={handleProcessAPI}
 							className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
@@ -98,7 +98,7 @@ const CsvProcessor = ({file,jsonData,handleFileChange,handleParse,handleProcessA
 							Procesar {jsonData.length} filas con la API
 						</button>
 
-						{/* 📡 Estado de procesamiento: texto gris oscuro */}
+						{/* Estado de procesamiento: texto gris oscuro */}
 						{status && (
 							<p className="mt-4 text-gray-800 font-medium">
 								<strong>Estado:</strong> {status}
