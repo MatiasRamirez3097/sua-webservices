@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import {useDispatch, useSelector} from 'react-redux'
 import { leyendaAction } from '../../redux/actions/resolucionesActions';
 import Papa from 'papaparse'; // Importamos papaparse
-import CsvProcessor from "../../utils/CsvProcessor";
+
+import CsvProcessor from "../../components/csv/CsvProcessor";
+
 import { Input } from '../../components';
 
 const Resoluciones = () => {
@@ -16,7 +18,6 @@ const Resoluciones = () => {
     
 
     const onChange = (e) => {
-        alert(import.meta.env.VITE_ENDPOINT)
         dispatch(leyendaAction(e.target.value))
     }
     // Maneja la selección del archivo
