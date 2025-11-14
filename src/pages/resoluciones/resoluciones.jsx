@@ -18,7 +18,6 @@ const Resoluciones = () => {
     
 
     const onChange = (e) => {
-        alert(import.meta.env.VITE_ENDPOINT)
         dispatch(leyendaAction(e.target.value))
     }
     // Maneja la selección del archivo
