@@ -1,10 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit'
-//import citiesReducer from './reducers/citiesReducer'
-//import usersReducer from './reducers/usersReducer'
+import resolucionesReducer from './reducers/resolucionesReducer'
 
 export const store = configureStore({
     reducer: {
-        //citiesReducer,
-        //usersReducer
+        resolucionesReducer
     }
 })

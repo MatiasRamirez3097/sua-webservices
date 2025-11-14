@@ -1,13 +1,26 @@
 import React, { useState } from 'react';
+import {useDispatch, useSelector} from 'react-redux'
+import { leyendaAction } from '../../redux/actions/resolucionesActions';
 import Papa from 'papaparse'; // Importamos papaparse
+
 import CsvProcessor from "../../components/csv/CsvProcessor";
 
+import { Input } from '../../components';
+
 const Resoluciones = () => {
+    const dispatch = useDispatch()
+    const {leyenda} = useSelector(store => store.resolucionesReducer)
+
     const [file, setFile] = useState(null);
     const [jsonData, setJsonData] = useState([]);
     const [headers, setHeaders] = useState([]);
     const [status, setStatus] = useState(''); // Para mostrar el estado del envío
     
+
+    const onChange = (e) => {
+        alert(import.meta.env.VITE_ENDPOINT)
+        dispatch(leyendaAction(e.target.value))
+    }
     // Maneja la selección del archivo
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
@@ -92,6 +105,12 @@ const Resoluciones = () => {
 
     return (
         <div>
+            <h5>Resoluciones!</h5>
+            <Input
+                name="leyenda"
+                onChange={(e) => onChange(e)}
+                value={leyenda}
+            />
             <CsvProcessor 
                 file={file}
                 handleFileChange={handleFileChange}
