@@ -104,7 +104,6 @@ const Resoluciones = () => {
 
     return (
         <div>
-            <h5>Resoluciones!</h5>
             <Input
                 name="leyenda"
                 onChange={(e) => onChange(e)}
