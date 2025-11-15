@@ -1,8 +1,10 @@
 import {createReducer} from '@reduxjs/toolkit'
-import { leyendaAction } from '../actions/resolucionesActions'
+import { leyendaAction, postResolucion } from '../actions/resolucionesActions'
 
 const initialState = {
-    leyenda: ''
+    csvResoluciones: null,
+    leyenda: '',
+    postStatus: ''
 }
 
 const resolucionesReducer = createReducer(initialState, 
@@ -10,6 +12,14 @@ const resolucionesReducer = createReducer(initialState,
         .addCase(leyendaAction,(state, action) => {
             const newState = { ...state, leyenda: action.payload}
             return newState    
+        })
+        .addCase(postResolucion.fulfilled, (state, action) => {
+            const newState = { ...state, postStatus: action.payload }
+            return newState
+        })
+        .addCase(postResolucion.rejected, (state, action) => {
+            const newState = { ...state, postStatus: action.payload }
+            return newState
         })
 )
 

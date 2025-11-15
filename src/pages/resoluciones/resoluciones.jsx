@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {useDispatch, useSelector} from 'react-redux'
-import { leyendaAction } from '../../redux/actions/resolucionesActions';
+import { leyendaAction, postResolucion } from '../../redux/actions/resolucionesActions';
 import Papa from 'papaparse'; // Importamos papaparse
 
 import CsvProcessor from "../../components/csv/CsvProcessor";
@@ -16,6 +16,7 @@ const Resoluciones = () => {
     const [headers, setHeaders] = useState([]);
     const [status, setStatus] = useState(''); // Para mostrar el estado del envío
     
+    const [rowStatus, setRowStatus] = useState({})
 
     const onChange = (e) => {
         dispatch(leyendaAction(e.target.value))
@@ -26,6 +27,7 @@ const Resoluciones = () => {
         setJsonData([]); // Limpiamos datos anteriores
         setHeaders([]); // Limpiamos cabeceras
         setStatus('');
+        setRowStatus({})
     };
 
     // Parsea el CSV cuando se presiona el botón "Cargar"
@@ -57,48 +59,29 @@ const Resoluciones = () => {
             alert("No hay datos para procesar. Carga un CSV.");
             return;
         }
-
+        
         setStatus('Procesando... por favor espera.');
-
-        // Usamos un bucle 'for...of' para poder usar 'await' correctamente
-        // Un 'forEach' con 'async' no esperará a que terminen las promesas.
+        
         let count = 0;
-        for (const row of jsonData) {
+        for (const [index, row] of jsonData.entries()) {
             count++;
             setStatus(`Procesando fila ${count} de ${jsonData.length}...`);
+            try{
+                await dispatch(postResolucion({
+                    sua: row.sua,
+                    anio: row.anio,
+                    leyenda: leyenda
+                })).unwrap()
 
-            try {
-                // Simulamos el envío a una API (reemplaza con tu URL real)
-                const response = await fetch('https://api.ejemplo.com/tu-endpoint', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // Aquí irían otros headers, como 'Authorization' si es necesario
-                },
-                    body: JSON.stringify(row) // 'row' es el objeto de la fila: { col1: 'val', col2: 'val', col3: 'val' }
-                });
-
-                if (!response.ok) {
-                    // Si la API devuelve un error (ej. 400, 500)
-                    console.error(`Error en la fila ${count}:`, row);
-                    // Opcional: podrías detener el proceso aquí si un fallo es crítico
-                    // throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                // (Opcional) Leer la respuesta de la API
-                // const apiResult = await response.json();
-                // console.log(`Resultado fila ${count}:`, apiResult);
-
+                setRowStatus(prev => ({...prev, [index]: 'success'}))
             } catch (error) {
-                console.error("Error al enviar la fila:", row, error);
-                setStatus(`Error en la fila ${count}. Revisa la consola.`);
-                // Detenemos el bucle si hay un error de red
-                break; 
+                console.error("Error en fila:", index, error)
+                setRowStatus(prev => ({ ...prev, [index]: 'error'}))
             }
-        }
+        }   
 
         if (count === jsonData.length) {
-        setStatus('¡Proceso completado! Todas las filas fueron enviadas.');
+            setStatus('¡Proceso completado! Todas las filas fueron enviadas.');
         }
     };
 
@@ -118,6 +101,7 @@ const Resoluciones = () => {
                 headers={headers}
                 status={status}
                 handleProcessAPI={handleProcessAPI}
+                rowStatus={rowStatus}
             />
         </div>
     )

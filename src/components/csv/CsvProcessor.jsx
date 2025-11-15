@@ -1,4 +1,26 @@
-const CsvProcessor = ({file,jsonData,handleFileChange,handleParse,handleProcessAPI,status,headers}) => {
+const CsvProcessor = ({
+	file,
+	jsonData,
+	handleFileChange,
+	handleParse,
+	handleProcessAPI,
+	status,
+	headers,
+	rowStatus
+}) => {
+	// Función auxiliar para colores
+  	const getRowStyle = (index) => {
+        // Verificamos si rowStatus existe para evitar errores si es undefined
+        if (!rowStatus) return {}; 
+
+        const state = rowStatus[index];
+        if (state === 'success') return { backgroundColor: '#d4edda' }; // Verde
+        if (state === 'error') return { backgroundColor: '#f8d7da' };   // Rojo
+        
+        return {}; // Sin color
+    };
+
+
 	return (
 		// Contenedor principal
 		<div className="border border-gray-300 p-10 bg-gray-800 min-h-0">
@@ -69,21 +91,26 @@ const CsvProcessor = ({file,jsonData,handleFileChange,handleParse,handleProcessA
 
 							{/* Filas del cuerpo: colores alternados (blanco / gris claro) */}
 							<tbody>
-								{jsonData.map((row, rowIndex) => (
-									<tr
-										key={rowIndex}
-										className={`${rowIndex % 2 === 0 ? "bg-gray-100" : "bg-gray-50"}`}
-									>
-										{headers.map((header) => (
-											<td
-												key={`${rowIndex}-${header}`} className="px-4 py-2 font-medium text-black border border-black-400"
-											>
-												{row[header]}
-											</td>
-										))}
-									</tr>
-								))}
-							</tbody>
+                            {jsonData.map((row, index) => (
+                                <tr 
+                                    key={index} 
+                                    // 3. AQUI APLICAS EL ESTILO DINÁMICO
+                                    style={getRowStyle(index)} 
+                                >
+                                    {headers.map((header) => (
+                                        <td key={`${index}-${header}`} style={{ padding: '8px' }}>
+                                            {row[header]}
+                                        </td>
+                                    ))}
+                                    
+                                    {/* Columna de estado (ícono) */}
+                                    <td style={{ textAlign: 'center' }}>
+                                        {rowStatus[index] === 'success' && '✅'}
+                                        {rowStatus[index] === 'error' && '❌'}
+                                    </td>
+                                </tr>
+                            ))}
+                        	</tbody>
 						</table>
 					</div>
 
