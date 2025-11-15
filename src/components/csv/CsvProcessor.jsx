@@ -1,10 +1,10 @@
 const CsvProcessor = ({file,jsonData,handleFileChange,handleParse,handleProcessAPI,status,headers}) => {
 	return (
 		// Contenedor principal
-		<div className="border border-gray-300 p-10 bg-gray-800 min-h-0">
+		<div className="w-full max-w-4xl mx-auto border border-gray-300 p-10 bg-gray-800 rounded-xl">
 
 			{/* Título principal */}
-			<h2 className="text-2xl font-bold text-white text-center p-15">
+			<h2 className="text-2xl font-bold text-white text-center p-10">
 				Procesador de CSV
 			</h2>
 
