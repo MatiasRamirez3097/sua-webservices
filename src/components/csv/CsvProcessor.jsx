@@ -105,6 +105,9 @@ const CsvProcessor = ({
 											{header}
 										</th>
 									))}
+									<th>
+										Resultado
+									</th>
 								</tr>
 							</thead>
 
