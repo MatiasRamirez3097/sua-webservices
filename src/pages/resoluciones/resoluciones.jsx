@@ -5,7 +5,7 @@ import Papa from 'papaparse'; // Importamos papaparse
 
 import CsvProcessor from "../../components/csv/CsvProcessor";
 
-import { Input } from '../../components';
+import { TextArea } from '../../components';
 
 const Resoluciones = () => {
     const dispatch = useDispatch()
@@ -87,9 +87,11 @@ const Resoluciones = () => {
 
     return (
         <div>
-            <Input
+            <TextArea
+                label="Ingresar la leyenda de resolución"
                 name="leyenda"
                 onChange={(e) => onChange(e)}
+                placeholder="Escribe aquí la resolución..."
                 value={leyenda}
             />
             <CsvProcessor 
