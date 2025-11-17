@@ -7,6 +7,10 @@ import CsvProcessor from "../../components/csv/CsvProcessor";
 
 import { TextArea } from '../../components';
 
+import { H2 } from '../../components'
+
+import {Div} from '../../components'
+
 const Resoluciones = () => {
     const dispatch = useDispatch()
     const {leyenda} = useSelector(store => store.resolucionesReducer)
@@ -86,13 +90,18 @@ const Resoluciones = () => {
     };
 
     return (
-        <div>
+        <Div className="w-full max-w-4xl mx-auto border border-gray-300 p-10 bg-gray-800 rounded-xl">
+            <H2
+                label="Ingresar la leyenda de resolución"
+                className="text-2xl font-bold text-white text-center mb-6"
+            />
             <TextArea
                 label="Ingresar la leyenda de resolución"
                 name="leyenda"
                 onChange={(e) => onChange(e)}
                 placeholder="Escribe aquí la resolución..."
                 value={leyenda}
+                className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
             />
             <CsvProcessor 
                 file={file}
@@ -104,7 +113,7 @@ const Resoluciones = () => {
                 handleProcessAPI={handleProcessAPI}
                 rowStatus={rowStatus}
             />
-        </div>
+        </Div>
     )
 }
 

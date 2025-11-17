@@ -1,3 +1,5 @@
+import Div from "../div/Div";
+
 const CsvProcessor = ({
     file,
     jsonData,
@@ -22,7 +24,7 @@ const CsvProcessor = ({
 
     return (
         // Contenedor principal
-        <div className="w-full max-w-4xl mx-auto border border-gray-300 p-10 bg-gray-800 rounded-xl">
+        <Div>
             {/* Título principal */}
             <h2 className="text-2xl font-bold text-white text-center p-10">
                 Procesador de CSV
@@ -141,7 +143,7 @@ const CsvProcessor = ({
                     </div>
                 </div>
             )}
-        </div>
+        </Div>
     );
 };
 
