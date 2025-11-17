@@ -1,4 +1,6 @@
 import Div from "../div/Div";
+import H2 from "../h2/H2";
+import P from "../p/P";
 
 const CsvProcessor = ({
     errores,
@@ -28,10 +30,7 @@ const CsvProcessor = ({
         // Contenedor principal
         <Div>
             {/* Título principal */}
-            <h2 className="text-2xl font-bold text-white text-center p-10">
-                Procesador de CSV
-            </h2>
-
+            <H2 className="text-2xl font-bold text-white text-center mb-6" label="Procesador de CSV"/>
             {/* Sección para subir archivo */}
             <div className="flex flex-col items-center gap-4">
                 {/* LABEL COMO BOTÓN PARA SUBIR ARCHIVO */}
@@ -52,9 +51,9 @@ const CsvProcessor = ({
                 />
 
                 {/* NOMBRE DEL ARCHIVO */}
-                <p className="text-sm text-gray-300 italic">
+                 <P>
                     {file ? file.name : "Ningún archivo seleccionado"}
-                </p>
+                </P>
 
                 {/* GRUPO DE BOTONES EN FILA */}
                 <div className="flex gap-4">
@@ -150,28 +149,32 @@ const CsvProcessor = ({
                             </thead>
 
                             {/* Filas del cuerpo: colores alternados (blanco / gris claro) */}
-                            <tbody>
+                            <tbody className="text-white">
                                 {jsonData.map((row, index) => (
-                                    <tr
-                                        key={index}
-                                        // 3. AQUI APLICAS EL ESTILO DINÁMICO
-                                        style={getRowStyle(index)}
-                                    >
+                                    <tr key={index} className="even:bg-gray-800 odd:bg-gray-900">
                                         {headers.map((header) => (
                                             <td
                                                 key={`${index}-${header}`}
-                                                style={{ padding: "8px" }}
+                                                className="px-4 py-2 border border-gray-700"
                                             >
                                                 {row[header]}
                                             </td>
                                         ))}
-
-                                        {/* Columna de estado (ícono) */}
-                                        <td style={{ textAlign: "center" }}>
-                                            {rowStatus[index] === "success" &&
-                                                "✅"}
-                                            {rowStatus[index] === "error" &&
-                                                "❌"}
+                                        {/* Celda de resultado con color + icono */}
+                                        <td
+                                            className={`
+                                                px-4 py-2 border border-gray-700 font-bold text-lg
+                                                ${
+                                                    rowStatus[index] === "success"
+                                                        ? "bg-green-700 text-white"
+                                                        : rowStatus[index] === "error"
+                                                        ? "bg-red-700 text-white"
+                                                        : "bg-gray-700"
+                                                }
+                                            `}
+                                        >
+                                            {rowStatus[index] === "success" && "✔️"}
+                                            {rowStatus[index] === "error" && "❌"}
                                         </td>
                                     </tr>
                                 ))}
