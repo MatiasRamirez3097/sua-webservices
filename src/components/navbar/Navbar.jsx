@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import Logo from "../../assets/Municipalidad_sin_fondo.png"
+import Logo from "../../assets/Municipalidad_sin_fondo.png";
 
 const Navbar = () => {
     return (
@@ -11,16 +11,27 @@ const Navbar = () => {
                             src={Logo}
                             className="h-22 w-auto object-contain"
                         />
-                        <span className="font-semibold text-xl tracking-wide">SUA Website</span>
+                        <span className="font-semibold text-xl tracking-wide">
+                            SUA Webservices
+                        </span>
                     </div>
                     <div className="hidden md:flex items-center space-x-10">
-                        <Link to="/home" className="hover:text-indigo-400 transition-colors">
+                        <Link
+                            to="/home"
+                            className="hover:text-indigo-400 transition-colors"
+                        >
                             Home
                         </Link>
-                        <Link to="/intervenciones" className="hover:text-indigo-400 transition-colors"> 
-                            Intervenciones 
+                        <Link
+                            to="/intervenciones"
+                            className="hover:text-indigo-400 transition-colors"
+                        >
+                            Intervenciones
                         </Link>
-                        <Link to="/resoluciones" className="hover:text-indigo-400 transition-colors">
+                        <Link
+                            to="/resoluciones"
+                            className="hover:text-indigo-400 transition-colors"
+                        >
                             Resoluciones
                         </Link>
                     </div>
@@ -29,15 +40,15 @@ const Navbar = () => {
                             <svg
                                 className="w-6 h-6"
                                 fill="none"
-                                stroke="currentColor"    
+                                stroke="currentColor"
                                 strokeWidth="2"
                                 viewBox="0 0 24 24"
                             >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M4 6h16M4 12h16M4 18h16" 
-                            />
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M4 6h16M4 12h16M4 18h16"
+                                />
                             </svg>
                         </button>
                     </div>

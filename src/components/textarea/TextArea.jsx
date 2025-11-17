@@ -1,7 +1,6 @@
 const TextArea = ({ label, name, onChange, placeholder, value }) => {
     return (
         <div className="w-full max-w-4xl mx-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8">
-
             <h2 className="text-2xl font-bold text-white text-center mb-6">
                 {label}
             </h2>
