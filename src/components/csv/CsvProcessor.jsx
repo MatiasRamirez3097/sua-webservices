@@ -26,7 +26,7 @@ const CsvProcessor = ({
         // Contenedor principal
         <div className="w-full max-w-4xl mx-auto border border-gray-300 p-10 bg-gray-800 rounded-xl">
             {/* Título principal */}
-            <h2 className="text-2xl font-bold text-white text-center p-10">
+            <h2 className="text-2xl font-bold text-white text-center pb-10 pt-5">
                 Procesador de CSV
             </h2>
 
@@ -87,9 +87,9 @@ const CsvProcessor = ({
             </div>
             {/* Mostrar botón solo si hay errores en el array */}
             {errores && errores.length > 0 && (
-                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+                <div className="mt-4 p-4 bg-indigo-200 border border-black rounded-lg flex items-center justify-between">
                     <div className="text-red-700">
-                        <p className="font-bold">
+                        <p className="font-bold text-left">
                             ⚠️ Se encontraron {errores.length} errores
                         </p>
                         <p className="text-sm">
@@ -99,7 +99,7 @@ const CsvProcessor = ({
 
                     <button
                         onClick={handleDescargarErrores}
-                        className="px-4 py-2 bg-red-600 text-white font-semibold rounded hover:bg-red-700 transition shadow-sm flex items-center gap-2"
+                        className="px-4 py-2 bg-red-600 text-white border border-black font-semibold rounded hover:bg-red-700 transition shadow-sm flex items-center gap-2"
                     >
                         {/* Icono de descarga opcional */}
                         <svg
@@ -130,7 +130,7 @@ const CsvProcessor = ({
                     </h3>
 
                     {/* Contenedor de tabla con scroll horizontal y sombra */}
-                    <div className="overflow-x-auto overflow-y-auto max-h-80 rounded-lg shadow">
+                    <div className="overflow-x-auto overflow-y-auto max-h-80 rounded-lg shadow border border-black">
                         <table className="w-full border text-center border-gray-300 border-collapse rounded-lg overflow-hidden">
                             {/* Encabezados: fondo gris y texto en mayúscula */}
                             <thead className="bg-gray-400 text-black">
@@ -143,33 +143,39 @@ const CsvProcessor = ({
                                             {header}
                                         </th>
                                     ))}
-                                    <th>Resultado</th>
+                                    <th className="px-4 py-2 text-center font-bold border border-black-400">
+                                        Resultado
+                                    </th>
                                 </tr>
                             </thead>
 
                             {/* Filas del cuerpo: colores alternados (blanco / gris claro) */}
-                            <tbody>
+                            <tbody className="text-white">
                                 {jsonData.map((row, index) => (
-                                    <tr
-                                        key={index}
-                                        // 3. AQUI APLICAS EL ESTILO DINÁMICO
-                                        style={getRowStyle(index)}
-                                    >
+                                    <tr key={index} className="even:bg-gray-800 odd:bg-gray-900">
                                         {headers.map((header) => (
                                             <td
                                                 key={`${index}-${header}`}
-                                                style={{ padding: "8px" }}
+                                                className="px-4 py-2 border border-gray-700"
                                             >
                                                 {row[header]}
                                             </td>
                                         ))}
-
-                                        {/* Columna de estado (ícono) */}
-                                        <td style={{ textAlign: "center" }}>
-                                            {rowStatus[index] === "success" &&
-                                                "✅"}
-                                            {rowStatus[index] === "error" &&
-                                                "❌"}
+                                        {/* Celda de resultado con color + icono */}
+                                        <td
+                                            className={`
+                                                px-4 py-2 border border-gray-700 font-bold text-lg
+                                                ${
+                                                    rowStatus[index] === "success"
+                                                        ? "bg-green-700 text-white"
+                                                        : rowStatus[index] === "error"
+                                                        ? "bg-red-700 text-white"
+                                                        : "bg-gray-700"
+                                                }
+                                            `}
+                                        >
+                                            {rowStatus[index] === "success" && "✔️"}
+                                            {rowStatus[index] === "error" && "❌"}
                                         </td>
                                     </tr>
                                 ))}
