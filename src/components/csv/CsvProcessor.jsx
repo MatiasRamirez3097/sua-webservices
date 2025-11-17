@@ -1,11 +1,13 @@
 import Div from "../div/Div";
 
 const CsvProcessor = ({
+    errores,
     file,
     jsonData,
     handleFileChange,
     handleParse,
     handleProcessAPI,
+    handleDescargarErrores,
     status,
     headers,
     rowStatus,
@@ -85,6 +87,41 @@ const CsvProcessor = ({
                     </button>
                 </div>
             </div>
+            {/* Mostrar botón solo si hay errores en el array */}
+            {errores && errores.length > 0 && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+                    <div className="text-red-700">
+                        <p className="font-bold">
+                            ⚠️ Se encontraron {errores.length} errores
+                        </p>
+                        <p className="text-sm">
+                            Descarga el reporte para revisarlos manualmente.
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={handleDescargarErrores}
+                        className="px-4 py-2 bg-red-600 text-white font-semibold rounded hover:bg-red-700 transition shadow-sm flex items-center gap-2"
+                    >
+                        {/* Icono de descarga opcional */}
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                            />
+                        </svg>
+                        Descargar CSV Errores
+                    </button>
+                </div>
+            )}
 
             {/* Tabla: se muestra solo si hay datos cargados */}
             {jsonData.length > 0 && (

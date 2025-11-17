@@ -19,7 +19,7 @@ const Resoluciones = () => {
     const [jsonData, setJsonData] = useState([]);
     const [headers, setHeaders] = useState([]);
     const [status, setStatus] = useState(''); // Para mostrar el estado del envío
-    
+
     const [rowStatus, setRowStatus] = useState({})
 
     const onChange = (e) => {
@@ -63,9 +63,9 @@ const Resoluciones = () => {
             alert("No hay datos para procesar. Carga un CSV.");
             return;
         }
-        
+
         setStatus('Procesando... por favor espera.');
-        
+
         let count = 0;
         for (const [index, row] of jsonData.entries()) {
             count++;
@@ -82,7 +82,7 @@ const Resoluciones = () => {
                 console.error("Error en fila:", index, error)
                 setRowStatus(prev => ({ ...prev, [index]: 'error'}))
             }
-        }   
+        }
 
         if (count === jsonData.length) {
             setStatus('¡Proceso completado! Todas las filas fueron enviadas.');
@@ -90,7 +90,7 @@ const Resoluciones = () => {
     };
 
     return (
-        <Div className="w-full max-w-4xl mx-auto border border-gray-300 p-10 bg-gray-800 rounded-xl">
+        <div className="w-full max-w-4xl mx-auto border border-gray-300 p-10 bg-gray-800 rounded-xl">
             <H2
                 label="Ingresar la leyenda de resolución"
                 className="text-2xl font-bold text-white text-center mb-6"
@@ -113,7 +113,7 @@ const Resoluciones = () => {
                 handleProcessAPI={handleProcessAPI}
                 rowStatus={rowStatus}
             />
-        </Div>
+        </div>
     )
 }
 
