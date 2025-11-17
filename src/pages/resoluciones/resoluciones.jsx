@@ -1,33 +1,60 @@
-import React, { useState } from 'react';
-import {useDispatch, useSelector} from 'react-redux'
-import { leyendaAction, postResolucion } from '../../redux/actions/resolucionesActions';
-import Papa from 'papaparse'; // Importamos papaparse
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+    leyendaAction,
+    postResolucion,
+} from "../../redux/actions/resolucionesActions";
+import Papa from "papaparse"; // Importamos papaparse
 
 import CsvProcessor from "../../components/csv/CsvProcessor";
 
-import { TextArea } from '../../components';
+import { TextArea } from "../../components";
 
 const Resoluciones = () => {
-    const dispatch = useDispatch()
-    const {leyenda} = useSelector(store => store.resolucionesReducer)
+    const dispatch = useDispatch();
+    const { errores, leyenda } = useSelector(
+        (store) => store.resolucionesReducer
+    );
 
     const [file, setFile] = useState(null);
     const [jsonData, setJsonData] = useState([]);
     const [headers, setHeaders] = useState([]);
-    const [status, setStatus] = useState(''); // Para mostrar el estado del envío
-    
-    const [rowStatus, setRowStatus] = useState({})
+    const [status, setStatus] = useState(""); // Para mostrar el estado del envío
+
+    const [rowStatus, setRowStatus] = useState({});
 
     const onChange = (e) => {
-        dispatch(leyendaAction(e.target.value))
-    }
+        dispatch(leyendaAction(e.target.value));
+    };
     // Maneja la selección del archivo
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
         setJsonData([]); // Limpiamos datos anteriores
         setHeaders([]); // Limpiamos cabeceras
-        setStatus('');
-        setRowStatus({})
+        setStatus("");
+        setRowStatus({});
+    };
+
+    const handleDescargarErrores = () => {
+        if (!errores || errores.length === 0) return;
+
+        // 1. Convertir JSON a CSV
+        const csv = Papa.unparse(errores);
+
+        // 2. Crear un Blob (archivo en memoria)
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+
+        // 3. Crear link de descarga temporal
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "reporte_errores.csv");
+        link.style.visibility = "hidden";
+
+        // 4. Simular click y limpiar
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     // Parsea el CSV cuando se presiona el botón "Cargar"
@@ -49,7 +76,7 @@ const Resoluciones = () => {
             error: (error) => {
                 console.error("Error al parsear el CSV:", error);
                 setStatus("Error al leer el archivo.");
-        }
+            },
         });
     };
 
@@ -59,29 +86,31 @@ const Resoluciones = () => {
             alert("No hay datos para procesar. Carga un CSV.");
             return;
         }
-        
-        setStatus('Procesando... por favor espera.');
-        
+
+        setStatus("Procesando... por favor espera.");
+
         let count = 0;
         for (const [index, row] of jsonData.entries()) {
             count++;
             setStatus(`Procesando fila ${count} de ${jsonData.length}...`);
-            try{
-                await dispatch(postResolucion({
-                    sua: row.sua,
-                    anio: row.anio,
-                    leyenda: leyenda
-                })).unwrap()
+            try {
+                await dispatch(
+                    postResolucion({
+                        sua: row.sua,
+                        anio: row.anio,
+                        leyenda: leyenda,
+                    })
+                ).unwrap();
 
-                setRowStatus(prev => ({...prev, [index]: 'success'}))
+                setRowStatus((prev) => ({ ...prev, [index]: "success" }));
             } catch (error) {
-                console.error("Error en fila:", index, error)
-                setRowStatus(prev => ({ ...prev, [index]: 'error'}))
+                console.error("Error en fila:", index, error);
+                setRowStatus((prev) => ({ ...prev, [index]: "error" }));
             }
-        }   
+        }
 
         if (count === jsonData.length) {
-            setStatus('¡Proceso completado! Todas las filas fueron enviadas.');
+            setStatus("¡Proceso completado! Todas las filas fueron enviadas.");
         }
     };
 
@@ -94,8 +123,10 @@ const Resoluciones = () => {
                 placeholder="Escribe aquí la resolución..."
                 value={leyenda}
             />
-            <CsvProcessor 
+            <CsvProcessor
+                errores={errores}
                 file={file}
+                handleDescargarErrores={handleDescargarErrores}
                 handleFileChange={handleFileChange}
                 handleParse={handleParse}
                 jsonData={jsonData}
@@ -105,7 +136,7 @@ const Resoluciones = () => {
                 rowStatus={rowStatus}
             />
         </div>
-    )
-}
+    );
+};
 
 export default Resoluciones;
