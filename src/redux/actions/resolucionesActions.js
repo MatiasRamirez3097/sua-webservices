@@ -18,7 +18,7 @@ const postResolucion = createAsyncThunk(
                     tipo: 1,
                     solucion: leyenda,
                     usuario: "mramire7",
-                    id_area: 2098,
+                    id_area: import.meta.env.VITE_IDAREA,
                     id_motivo_cierre: 0,
                     image: "",
                 },
