@@ -1,22 +1,26 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import { defineConfig, loadEnv } from "vite"; // <--- 1. Importamos loadEnv
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss()
-  ],
-  server: {
-    proxy: {
-      // Definimos un "apodo" para la API
-      '/api-rosario': {
-        target: 'https://t-apimgw.rosario.gob.ar', // El dominio real
-        changeOrigin: true, // Esto engaña al servidor para que crea que la petición viene de allí mismo
-        secure: false,
-        rewrite: (path) => path.replace(/^\/api-rosario/, '') // Elimina el apodo antes de enviar
-      }
-    }
-  }
-})
+// 2. Cambiamos esto a una FUNCIÓN para recibir el 'mode'
+export default defineConfig(({ mode }) => {
+    // 3. Cargamos las variables del archivo .env
+    const env = loadEnv(mode, process.cwd(), "");
+
+    return {
+        plugins: [react(), tailwindcss()],
+        server: {
+            proxy: {
+                // IMPORTANTE: Cambié '/api-rosario' a '/api' para que coincida
+                // con lo que configuramos en tu archivo .env (VITE_ENDPOINT=/api).
+                "/api": {
+                    target: env.VITE_TARGET, // <--- 4. Ahora sí existe la variable 'env'
+                    changeOrigin: true,
+                    secure: false,
+                    rewrite: (path) => path.replace(/^\/api/, ""),
+                },
+            },
+        },
+    };
+});
