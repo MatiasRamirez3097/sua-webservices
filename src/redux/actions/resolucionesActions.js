@@ -13,6 +13,12 @@ const fechaResolucionAction = createAction("fechaResolucionAction", (val) => {
     };
 });
 
+const usuarioResolucionAction = createAction("usuarioResolucionAction", (val) => {
+    return {
+        payload: val,
+    };
+});
+
 const postResolucion = createAsyncThunk(
     "postResolucion",
     async ({ sua, anio, leyenda = "" }, { rejectWithValue }) => {
@@ -43,4 +49,4 @@ const postResolucion = createAsyncThunk(
     }
 );
 
-export { leyendaAction, postResolucion, fechaResolucionAction };
+export { leyendaAction, postResolucion, fechaResolucionAction, usuarioResolucionAction };

@@ -16,7 +16,6 @@ const Input = ({
                     <input 
                         type={type}
                         value={value}
-                        step="1"
                         className={className}
                         name={name}
                         onChange={onChange}
