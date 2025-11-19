@@ -1,3 +1,6 @@
+import Div from "../div/Div";
+import Label from "../label/Label";
+
 const CsvProcessor = ({
     errores,
     file,
@@ -24,11 +27,9 @@ const CsvProcessor = ({
 
     return (
         // Contenedor principal
-        <div className="w-full max-w-4xl mx-auto border border-gray-300 p-10 bg-gray-800 rounded-xl">
+        <Div>
             {/* Título principal */}
-            <h2 className="text-2xl font-bold text-white text-center pb-10 pt-5">
-                Procesador de CSV
-            </h2>
+            <Label label="Procesador de CSV" />
 
             {/* Sección para subir archivo */}
             <div className="flex flex-col items-center gap-4">
@@ -184,7 +185,7 @@ const CsvProcessor = ({
                     </div>
                 </div>
             )}
-        </div>
+        </Div>
     );
 };
 
