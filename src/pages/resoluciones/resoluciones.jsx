@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
+    fechaResolucionAction,
     leyendaAction,
     postResolucion,
 } from "../../redux/actions/resolucionesActions";
@@ -8,11 +9,17 @@ import Papa from "papaparse"; // Importamos papaparse
 
 import CsvProcessor from "../../components/csv/CsvProcessor";
 
-import { TextArea } from "../../components";
+import TextArea from "../../components/textarea/TextArea";
+
+import H2 from "../../components/h2/H2";
+
+import Input from "../../components/input/Input"
+
+import Div from "../../components/div/Div";
 
 const Resoluciones = () => {
     const dispatch = useDispatch();
-    const { errores, leyenda } = useSelector(
+    const { errores, leyenda, fechaResolucion } = useSelector(
         (store) => store.resolucionesReducer
     );
 
@@ -24,7 +31,8 @@ const Resoluciones = () => {
     const [rowStatus, setRowStatus] = useState({});
 
     const onChange = (e) => {
-        dispatch(leyendaAction(e.target.value));
+        if (e.target.name == "leyenda") dispatch(leyendaAction(e.target.value));
+        else if (e.target.name == "fecha") dispatch(fechaResolucionAction(e.target.value))
     };
     // Maneja la selección del archivo
     const handleFileChange = (e) => {
@@ -115,7 +123,8 @@ const Resoluciones = () => {
     };
 
     return (
-        <div>
+        <Div>
+            <H2 label="RESOLUCIONES MASIVAS BRO"/>
             <TextArea
                 label="Ingresar la leyenda de resolución"
                 name="leyenda"
@@ -123,6 +132,20 @@ const Resoluciones = () => {
                 placeholder="Escribe aquí la resolución..."
                 value={leyenda}
             />
+            <Div>
+                <Input
+                    label="Ingresar la fecha de resolución"
+                    value={fechaResolucion}
+                    name="fecha"
+                    onChange={(e) => onChange(e)}
+                    type="datetime-local"
+                />
+                <Input
+                    label="ingresar nombre del usuario"
+                    name="usuarioderesolucion"
+                    type="text"
+                />
+            </Div>
             <CsvProcessor
                 errores={errores}
                 file={file}
@@ -135,7 +158,7 @@ const Resoluciones = () => {
                 handleProcessAPI={handleProcessAPI}
                 rowStatus={rowStatus}
             />
-        </div>
+        </Div>
     );
 };
 
