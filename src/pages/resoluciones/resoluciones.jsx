@@ -132,20 +132,24 @@ const Resoluciones = () => {
                 placeholder="Escribe aquí la resolución..."
                 value={leyenda}
             />
-            <Div>
-                <Input
-                    label="Ingresar la fecha de resolución"
-                    value={fechaResolucion}
-                    name="fecha"
-                    onChange={(e) => onChange(e)}
-                    type="datetime-local"
-                />
-                <Input
-                    label="ingresar nombre del usuario"
-                    name="usuarioderesolucion"
-                    type="text"
-                />
-            </Div>
+            <div className="flex gap-4">
+                <div className="flex-1">
+                    <Input
+                        label="Ingresar la fecha de resolución"
+                        value={fechaResolucion}
+                        name="fecha"
+                        onChange={(e) => onChange(e)}
+                        type="datetime-local"
+                    />
+                </div>
+                <div className="flex-1">
+                    <Input
+                        label="Ingresar nombre del usuario"
+                        name="usuarioderesolucion"
+                        type="text"
+                    />
+                </div>
+            </div>
             <CsvProcessor
                 errores={errores}
                 file={file}
