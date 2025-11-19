@@ -168,9 +168,9 @@ const CsvProcessor = ({
                                                 px-4 py-2 border border-gray-700 font-bold text-lg
                                                 ${
                                                     rowStatus[index] === "success"
-                                                        ? "bg-green-700 text-white"
+                                                        ? "bg-green-700/30 text-white"
                                                         : rowStatus[index] === "error"
-                                                        ? "bg-red-700 text-white"
+                                                        ? "bg-red-700/30 text-white"
                                                         : "bg-gray-700"
                                                 }
                                             `}
