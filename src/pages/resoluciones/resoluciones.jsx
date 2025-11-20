@@ -4,6 +4,7 @@ import {
     fechaResolucionAction,
     leyendaAction,
     postResolucion,
+    usuarioResolucionAction,
 } from "../../redux/actions/resolucionesActions";
 import Papa from "papaparse"; // Importamos papaparse
 
@@ -19,7 +20,7 @@ import Div from "../../components/div/Div";
 
 const Resoluciones = () => {
     const dispatch = useDispatch();
-    const { errores, leyenda, fechaResolucion } = useSelector(
+    const { errores, leyenda, fechaResolucion, usuarioResolucion, } = useSelector(
         (store) => store.resolucionesReducer
     );
 
@@ -33,6 +34,7 @@ const Resoluciones = () => {
     const onChange = (e) => {
         if (e.target.name == "leyenda") dispatch(leyendaAction(e.target.value));
         else if (e.target.name == "fecha") dispatch(fechaResolucionAction(e.target.value))
+        else if (e.target.name == "usuarioresolucion") dispatch(usuarioResolucionAction(e.target.value))
     };
     // Maneja la selección del archivo
     const handleFileChange = (e) => {
@@ -132,20 +134,27 @@ const Resoluciones = () => {
                 placeholder="Escribe aquí la resolución..."
                 value={leyenda}
             />
-            <Div>
-                <Input
-                    label="Ingresar la fecha de resolución"
-                    value={fechaResolucion}
-                    name="fecha"
-                    onChange={(e) => onChange(e)}
-                    type="datetime-local"
-                />
-                <Input
-                    label="ingresar nombre del usuario"
-                    name="usuarioderesolucion"
-                    type="text"
-                />
-            </Div>
+            <div className="flex gap-4">
+                <div className="flex-1">
+                    <Input
+                        label="Ingresar la fecha de resolución"
+                        value={fechaResolucion}
+                        name="fecha"
+                        onChange={(e) => onChange(e)}
+                        type="datetime-local"
+                        step="1"
+                    />
+                </div>
+                <div className="flex-1">
+                    <Input
+                        label="Ingresar nombre del usuario"
+                        name="usuarioresolucion"
+                        type="text"
+                        value={usuarioResolucion}
+                        onChange={(e) => onChange(e)}
+                    />
+                </div>
+            </div>
             <CsvProcessor
                 errores={errores}
                 file={file}
