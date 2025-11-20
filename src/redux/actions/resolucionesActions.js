@@ -7,48 +7,46 @@ const leyendaAction = createAction("leyendaAction", (val) => {
     };
 });
 
+const fechaResolucionAction = createAction("fechaResolucionAction", (val) => {
+    return {
+        payload: val,
+    };
+});
+
+const usuarioResolucionAction = createAction("usuarioResolucionAction", (val) => {
+    return {
+        payload: val,
+    };
+});
+
 const postResolucion = createAsyncThunk(
     "postResolucion",
     async ({ sua, anio, leyenda = "" }, { rejectWithValue }) => {
         try {
-            const res = await server.post(
-                `/solicitudes/resolver/${sua}-${anio}`,
-                {
-                    fecha: "15/11/2025 07:00:00",
-                    tipo: 1,
-                    solucion: leyenda,
-                    usuario: "mramire7",
-                    id_area: import.meta.env.VITE_IDAREA,
-                    id_motivo_cierre: 0,
-                    image: "",
-                },
-                {
-                    headers: {
-                        "X-Gravitee-Api-Key": import.meta.env.VITE_APIKEY,
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
+            const res = await server.post(`/resoluciones`, {
+                anio: anio,
+                sua: sua,
+                fecha: fecha,
+                tipo: 1,
+                solucion: leyenda,
+                usuario: usuario,
+                id_motivo_cierre: 0,
+                image: "",
+            });
             return res.data.response;
         } catch (err) {
             console.log(err.response.data.detail);
-            return rejectWithValue(
-                err.response
-                    ? {
-                          sua: sua,
-                          anio: anio,
-                          err: err.response.data.detail
-                              ? err.response.data.detail
-                              : "Error interno, veificar manualmente",
-                      }
-                    : {
-                          sua: sua,
-                          anio: anio,
-                          err: "Error desconocido",
-                      }
-            );
+            const msg = err.response?.data?.detail || "Error desconocido";
+
+            console.log("Error:", msg);
+
+            return rejectWithValue({
+                sua,
+                anio,
+                err: msg,
+            });
         }
     }
 );
 
-export { leyendaAction, postResolucion };
+export { leyendaAction, postResolucion, fechaResolucionAction, usuarioResolucionAction };

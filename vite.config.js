@@ -18,7 +18,6 @@ export default defineConfig(({ mode }) => {
                     target: env.VITE_TARGET, // <--- 4. Ahora sí existe la variable 'env'
                     changeOrigin: true,
                     secure: false,
-                    rewrite: (path) => path.replace(/^\/api/, ""),
                 },
             },
         },

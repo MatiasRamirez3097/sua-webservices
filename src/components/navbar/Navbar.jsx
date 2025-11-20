@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import Logo from "../../assets/Municipalidad_sin_fondo.png";
+import Button from "../button/Button";
 
 const Navbar = () => {
     return (
@@ -34,23 +35,11 @@ const Navbar = () => {
                         >
                             Resoluciones
                         </Link>
-                    </div>
-                    <div className="md:hidden">
-                        <button id="menu-boton" className="focus:outline-none">
-                            <svg
-                                className="w-6 h-6"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M4 6h16M4 12h16M4 18h16"
-                                />
-                            </svg>
-                        </button>
+                        <Button 
+                            text="Inicio de sesion"
+                            className="text-indigo-400"
+                        >
+                        </Button>
                     </div>
                 </div>
             </div>

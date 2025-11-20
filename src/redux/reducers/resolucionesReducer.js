@@ -1,11 +1,13 @@
 import { createReducer } from "@reduxjs/toolkit";
-import { leyendaAction, postResolucion } from "../actions/resolucionesActions";
+import { fechaResolucionAction, leyendaAction, postResolucion, usuarioResolucionAction } from "../actions/resolucionesActions";
 
 const initialState = {
     csvResoluciones: null,
     leyenda: "",
     postStatus: "",
     errores: [],
+    fechaResolucion: "",
+    usuarioResolucion: "",
 };
 
 const resolucionesReducer = createReducer(initialState, (builder) =>
@@ -21,6 +23,14 @@ const resolucionesReducer = createReducer(initialState, (builder) =>
         .addCase(postResolucion.rejected, (state, action) => {
             const { anio, sua, err } = action.payload;
             state.errores.push({ anio, sua, err });
+        })
+        .addCase(fechaResolucionAction, (state, action) => {
+            const newState = { ...state, fechaResolucion: action.payload };
+            return newState;
+        })
+        .addCase(usuarioResolucionAction, (state, action) => {
+            const newState = {...state, usuarioResolucion: action.payload};
+            return newState;
         })
 );
 
