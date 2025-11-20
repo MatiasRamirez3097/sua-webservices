@@ -66,4 +66,4 @@ const authenticate = createAsyncThunk("authenticate", async () => {
     };
 });
 
-export { authenticate, getCountries, logOut, signIn, signUp };
+export { authenticate, logOut, signIn, signUp };

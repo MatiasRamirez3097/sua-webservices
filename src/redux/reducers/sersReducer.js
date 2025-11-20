@@ -1,11 +1,5 @@
 import { createReducer } from "@reduxjs/toolkit";
-import {
-    authenticate,
-    getCountries,
-    logOut,
-    signIn,
-    signUp,
-} from "../actions/usersActions";
+import { authenticate, logOut, signIn, signUp } from "../actions/usersActions";
 
 const initialState = {
     countries: [],
@@ -17,14 +11,6 @@ const initialState = {
 
 const usersReducer = createReducer(initialState, (builder) =>
     builder
-        .addCase(getCountries.fulfilled, (state, action) => {
-            const newState = { ...state, countries: action.payload };
-            return newState;
-        })
-        .addCase(getCountries.rejected, (state, action) => {
-            const newState = { ...state, countries: action.payload };
-            return newState;
-        })
         .addCase(signIn.fulfilled, (state, action) => {
             const newState = { ...state, ...action.payload };
             return newState;
