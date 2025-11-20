@@ -26,10 +26,10 @@ const postResolucion = createAsyncThunk(
             const res = await server.post(`/resoluciones`, {
                 anio: anio,
                 sua: sua,
-                fecha: "15/11/2025 07:00:00",
+                fecha: fecha,
                 tipo: 1,
                 solucion: leyenda,
-                usuario: "mramire7",
+                usuario: usuario,
                 id_motivo_cierre: 0,
                 image: "",
             });
