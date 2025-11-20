@@ -14,7 +14,7 @@ import TextArea from "../../components/textarea/TextArea";
 
 import H2 from "../../components/h2/H2";
 
-import Input from "../../components/input/Input"
+import Input from "../../components/input/Input";
 
 import Div from "../../components/div/Div";
 
@@ -109,6 +109,8 @@ const Resoluciones = () => {
                         sua: row.sua,
                         anio: row.anio,
                         leyenda: leyenda,
+                        usuario: usuarioResolucion,
+                        fecha: fechaResolucion,
                     })
                 ).unwrap();
 

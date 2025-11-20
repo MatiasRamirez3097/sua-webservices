@@ -6,5 +6,6 @@ import TextArea from './textarea/TextArea'
 import H2 from './h2/H2'
 import Label from './label/Label'
 import Div from './div/Div'
+import Modal from './modal/Modal'
 
-export { Button, Footer, Input, Navbar, TextArea, H2, Label, Div };
+export { Button, Footer, Input, Navbar, TextArea, H2, Label, Div, Modal };
