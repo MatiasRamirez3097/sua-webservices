@@ -1,6 +1,3 @@
-import Label from "../label/Label";
-import Div from "../div/Div";
-
 const TextArea = ({ 
     label, 
     name, 
@@ -11,18 +8,14 @@ const TextArea = ({
 }) => {
     return (
         <>
-            <Div>
-                <Label label={label}/>
-
-                <textarea
-                    name={name}
-                    onChange={onChange}
-                    value={value}
-                    rows={3}
-                    className={className}
-                    placeholder={placeholder}
-                />
-            </Div>
+            <textarea
+                name={name}
+                onChange={onChange}
+                value={value}
+                rows={3}
+                className={className}
+                placeholder={placeholder}
+            />
         </>
     );
 };

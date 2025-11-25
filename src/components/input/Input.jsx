@@ -1,8 +1,4 @@
-import Label from "../label/Label";
-import Div from "../div/Div";
-
 const Input = ({
-    label,
     className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y",
     name,
     type,
@@ -11,16 +7,15 @@ const Input = ({
 }) => {
     return (
         <>
-            <Div>
-                <Label label={label}/>
-                    <input 
-                        type={type}
-                        value={value}
-                        className={className}
-                        name={name}
-                        onChange={onChange}
-                    />
-            </Div>        
+            <div>
+                <input 
+                    type={type}
+                    value={value}
+                    className={className}
+                    name={name}
+                    onChange={onChange}
+                />
+            </div>        
         </>    
     );
 };

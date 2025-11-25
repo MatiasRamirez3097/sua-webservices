@@ -22,6 +22,7 @@ const usuarioResolucionAction = createAction("usuarioResolucionAction", (val) =>
 const postResolucion = createAsyncThunk(
     "postResolucion",
     async ({ sua, anio, leyenda = "" }, { rejectWithValue }) => {
+        console.log (anio)
         try {
             const res = await server.post(`/resoluciones`, {
                 anio: anio,
