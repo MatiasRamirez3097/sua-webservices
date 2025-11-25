@@ -13,15 +13,21 @@ const fechaResolucionAction = createAction("fechaResolucionAction", (val) => {
     };
 });
 
-const usuarioResolucionAction = createAction("usuarioResolucionAction", (val) => {
-    return {
-        payload: val,
-    };
-});
+const usuarioResolucionAction = createAction(
+    "usuarioResolucionAction",
+    (val) => {
+        return {
+            payload: val,
+        };
+    }
+);
 
 const postResolucion = createAsyncThunk(
     "postResolucion",
-    async ({ sua, anio, leyenda = "" }, { rejectWithValue }) => {
+    async (
+        { sua, anio, fecha, leyenda = "", usuario, token },
+        { rejectWithValue }
+    ) => {
         try {
             const res = await server.post(`/resoluciones`, {
                 anio: anio,
@@ -31,6 +37,7 @@ const postResolucion = createAsyncThunk(
                 solucion: leyenda,
                 usuario: usuario,
                 id_motivo_cierre: 0,
+                token: token,
                 image: "",
             });
             return res.data.response;
@@ -49,4 +56,9 @@ const postResolucion = createAsyncThunk(
     }
 );
 
-export { leyendaAction, postResolucion, fechaResolucionAction, usuarioResolucionAction };
+export {
+    leyendaAction,
+    postResolucion,
+    fechaResolucionAction,
+    usuarioResolucionAction,
+};

@@ -14,15 +14,17 @@ import TextArea from "../../components/textarea/TextArea";
 
 import H2 from "../../components/h2/H2";
 
-import Input from "../../components/input/Input"
+import Input from "../../components/input/Input";
 
 import Div from "../../components/div/Div";
 
+import { Label } from "../../components";
+
 const Resoluciones = () => {
     const dispatch = useDispatch();
-    const { errores, leyenda, fechaResolucion, usuarioResolucion, } = useSelector(
-        (store) => store.resolucionesReducer
-    );
+    const { errores, leyenda, fechaResolucion, usuarioResolucion } =
+        useSelector((store) => store.resolucionesReducer);
+    const { user } = useSelector((store) => store.usersReducer);
 
     const [file, setFile] = useState(null);
     const [jsonData, setJsonData] = useState([]);
@@ -33,8 +35,10 @@ const Resoluciones = () => {
 
     const onChange = (e) => {
         if (e.target.name == "leyenda") dispatch(leyendaAction(e.target.value));
-        else if (e.target.name == "fecha") dispatch(fechaResolucionAction(e.target.value))
-        else if (e.target.name == "usuarioresolucion") dispatch(usuarioResolucionAction(e.target.value))
+        else if (e.target.name == "fecha")
+            dispatch(fechaResolucionAction(e.target.value));
+        else if (e.target.name == "usuarioresolucion")
+            dispatch(usuarioResolucionAction(e.target.value));
     };
     // Maneja la selección del archivo
     const handleFileChange = (e) => {
@@ -109,6 +113,9 @@ const Resoluciones = () => {
                         sua: row.sua,
                         anio: row.anio,
                         leyenda: leyenda,
+                        usuario: usuarioResolucion,
+                        fecha: fechaResolucion,
+                        token: user.token,
                     })
                 ).unwrap();
 
@@ -126,18 +133,20 @@ const Resoluciones = () => {
 
     return (
         <Div>
-            <H2 label="RESOLUCIONES MASIVAS BRO"/>
-            <TextArea
-                label="Ingresar la leyenda de resolución"
-                name="leyenda"
-                onChange={(e) => onChange(e)}
-                placeholder="Escribe aquí la resolución..."
-                value={leyenda}
-            />
-            <div className="flex gap-4">
+            <H2 label="RESOLUCIONES MASIVAS" />
+            <Div>
+                <Label label="Ingresar la leyenda de resolución" />
+                <TextArea
+                    name="leyenda"
+                    onChange={(e) => onChange(e)}
+                    placeholder="Escribe aquí la resolución..."
+                    value={leyenda}
+                />
+            </Div>
+            <div className="flex gap-4 w-full max-w-4xl mx-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8">
                 <div className="flex-1">
+                    <Label label="Ingresar la fecha de resolución" />
                     <Input
-                        label="Ingresar la fecha de resolución"
                         value={fechaResolucion}
                         name="fecha"
                         onChange={(e) => onChange(e)}
@@ -146,8 +155,8 @@ const Resoluciones = () => {
                     />
                 </div>
                 <div className="flex-1">
+                    <Label label="Ingresar nombre del usuario" />
                     <Input
-                        label="Ingresar nombre del usuario"
                         name="usuarioresolucion"
                         type="text"
                         value={usuarioResolucion}
