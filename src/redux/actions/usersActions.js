@@ -17,6 +17,16 @@ const logOut = createAction("logout", () => {
     };
 });
 
+const setUser = createAction("setUser", ({ user, token }) => {
+    return {
+        payload: {
+            user: user,
+            token: token,
+            status: "online",
+        },
+    };
+});
+
 const signIn = createAsyncThunk("signIn", async (data) => {
     console.log(data.email);
     const res = await server.post("/auth/signin", {
@@ -66,4 +76,4 @@ const authenticate = createAsyncThunk("authenticate", async () => {
     };
 });
 
-export { authenticate, logOut, signIn, signUp };
+export { authenticate, logOut, setUser, signIn, signUp };

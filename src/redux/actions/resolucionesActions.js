@@ -25,7 +25,7 @@ const usuarioResolucionAction = createAction(
 const postResolucion = createAsyncThunk(
     "postResolucion",
     async (
-        { sua, anio, fecha, leyenda = "", usuario },
+        { sua, anio, fecha, leyenda = "", usuario, token },
         { rejectWithValue }
     ) => {
         try {
@@ -37,6 +37,7 @@ const postResolucion = createAsyncThunk(
                 solucion: leyenda,
                 usuario: usuario,
                 id_motivo_cierre: 0,
+                token: token,
                 image: "",
             });
             return res.data.response;
