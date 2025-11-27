@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import Logo from "../../assets/Municipalidad_sin_fondo.png";
-import { Button } from "../";
+import { Button, RoleGuard } from "../";
 
 const Navbar = ({
     toggleLogin,
@@ -28,24 +28,22 @@ const Navbar = ({
                         >
                             Home
                         </Link>
-                        <Link
-                            to="/intervenciones"
-                            className="hover:text-indigo-400 transition-colors"
-                        >
-                            Intervenciones
-                        </Link>
-                        <Link
-                            to="/resoluciones"
-                            className="hover:text-indigo-400 transition-colors"
-                        >
-                            Resoluciones
-                        </Link>
-                        <Link
-                            to="/usuarios"
-                            className="hover:text-indigo-400 transition-colors"
-                        >
-                            Usuarios
-                        </Link>
+
+                        <RoleGuard allowedRoles={["manager", "admin"]}>
+                            <Link
+                                to="/intervenciones"
+                                className="hover:text-indigo-400 transition-colors"
+                            >
+                                Intervenciones
+                            </Link>
+                            <Link
+                                to="/resoluciones"
+                                className="hover:text-indigo-400 transition-colors"
+                            >
+                                Resoluciones
+                            </Link>
+                        </RoleGuard>
+
                         {Object.keys(user).length == 0 ? (
                             <Button
                                 text="Iniciar sesion"

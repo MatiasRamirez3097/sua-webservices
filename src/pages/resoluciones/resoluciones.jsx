@@ -4,7 +4,6 @@ import {
     fechaResolucionAction,
     leyendaAction,
     postResolucion,
-    usuarioResolucionAction,
 } from "../../redux/actions/resolucionesActions";
 import Papa from "papaparse"; // Importamos papaparse
 
@@ -22,8 +21,9 @@ import { Label } from "../../components";
 
 const Resoluciones = () => {
     const dispatch = useDispatch();
-    const { errores, leyenda, fechaResolucion, usuarioResolucion } =
-        useSelector((store) => store.resolucionesReducer);
+    const { errores, leyenda, fechaResolucion } = useSelector(
+        (store) => store.resolucionesReducer
+    );
     const { user } = useSelector((store) => store.usersReducer);
 
     const [file, setFile] = useState(null);
@@ -37,8 +37,6 @@ const Resoluciones = () => {
         if (e.target.name == "leyenda") dispatch(leyendaAction(e.target.value));
         else if (e.target.name == "fecha")
             dispatch(fechaResolucionAction(e.target.value));
-        else if (e.target.name == "usuarioresolucion")
-            dispatch(usuarioResolucionAction(e.target.value));
     };
     // Maneja la selección del archivo
     const handleFileChange = (e) => {
@@ -113,7 +111,6 @@ const Resoluciones = () => {
                         sua: row.sua,
                         anio: row.anio,
                         leyenda: leyenda,
-                        usuario: usuarioResolucion,
                         fecha: fechaResolucion,
                         token: user.token,
                     })
@@ -152,15 +149,6 @@ const Resoluciones = () => {
                         onChange={(e) => onChange(e)}
                         type="datetime-local"
                         step="1"
-                    />
-                </div>
-                <div className="flex-1">
-                    <Label label="Ingresar nombre del usuario" />
-                    <Input
-                        name="usuarioresolucion"
-                        type="text"
-                        value={usuarioResolucion}
-                        onChange={(e) => onChange(e)}
                     />
                 </div>
             </div>

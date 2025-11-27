@@ -8,6 +8,8 @@ import Label from "./label/Label";
 import Div from "./div/Div";
 import Modal from "./modal/Modal";
 import LoginForm from "./forms/LoginForm";
+import RoleGuard from "./roleGuard/RoleGuard";
+import ProtectedRoute from "./protectedRoute/ProtectedRoute";
 
 export {
     Button,
@@ -20,4 +22,6 @@ export {
     Label,
     Div,
     Modal,
+    ProtectedRoute,
+    RoleGuard,
 };
