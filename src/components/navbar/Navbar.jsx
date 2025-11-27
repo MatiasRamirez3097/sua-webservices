@@ -40,6 +40,12 @@ const Navbar = ({
                         >
                             Resoluciones
                         </Link>
+                        <Link
+                            to="/usuarios"
+                            className="hover:text-indigo-400 transition-colors"
+                        >
+                            Usuarios
+                        </Link>
                         {Object.keys(user).length == 0 ? (
                             <Button
                                 text="Iniciar sesion"
