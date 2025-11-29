@@ -3,6 +3,7 @@ import {
     fechaResolucionAction,
     leyendaAction,
     postResolucion,
+    typeAction,
 } from "../actions/resolucionesActions";
 
 const initialState = {
@@ -11,6 +12,7 @@ const initialState = {
     postStatus: "",
     errores: [],
     fechaResolucion: "",
+    type: "RESOLUCION",
 };
 
 const resolucionesReducer = createReducer(initialState, (builder) =>
@@ -29,6 +31,10 @@ const resolucionesReducer = createReducer(initialState, (builder) =>
         })
         .addCase(fechaResolucionAction, (state, action) => {
             const newState = { ...state, fechaResolucion: action.payload };
+            return newState;
+        })
+        .addCase(typeAction, (state, action) => {
+            const newState = { ...state, type: action.payload };
             return newState;
         })
 );

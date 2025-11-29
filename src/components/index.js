@@ -1,3 +1,4 @@
+import CsvProcessor from "./csvProcessor/CsvProcessor";
 import Navbar from "./navbar/Navbar";
 import Footer from "./footer/Footer";
 import Button from "./button/Button";
@@ -13,6 +14,7 @@ import ProtectedRoute from "./protectedRoute/ProtectedRoute";
 
 export {
     Button,
+    CsvProcessor,
     Footer,
     Input,
     LoginForm,
