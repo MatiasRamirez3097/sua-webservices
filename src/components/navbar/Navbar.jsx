@@ -28,6 +28,7 @@ const Navbar = ({
                         >
                             Home
                         </Link>
+
                         <RoleGuard allowedRoles={["manager", "admin"]}>
                             <Link
                                 to="/intervenciones"
@@ -42,17 +43,27 @@ const Navbar = ({
                                 Resoluciones
                             </Link>
                         </RoleGuard>
+
+                        <RoleGuard allowedRoles={["admin"]}>
+                            <Link
+                                to="/usuarios"
+                                className="hover:text-indigo-400 transition-colors"
+                            >
+                                Usuarios
+                            </Link>
+                        </RoleGuard>
+
                         {Object.keys(user).length == 0 ? (
                             <Button
                                 text="Iniciar sesion"
                                 className="text-indigo-400"
-                                onclick={toggleLogin}
+                                onClick={toggleLogin}
                             ></Button>
                         ) : (
                             <Button
                                 text="Cerrar sesion"
                                 className="text-indigo-400"
-                                onclick={logout}
+                                onClick={logout}
                             ></Button>
                         )}
                     </div>
