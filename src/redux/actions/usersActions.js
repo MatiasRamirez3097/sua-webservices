@@ -1,10 +1,40 @@
-import {
-    createAction,
-    createAsyncThunk,
-    isRejectedWithValue,
-} from "@reduxjs/toolkit";
+import { createAction, createAsyncThunk } from "@reduxjs/toolkit";
 import { server } from "../../Api";
 import { ls } from "../../utils/ls.js";
+
+export const getUsers = createAsyncThunk(
+    "users/getUsers",
+    async (_, { rejectWithValue }) => {
+        try {
+            const token = ls.getText("token");
+
+            const res = await server.get("/users", {
+                headers: {
+                    Authorization: "Bearer " + token,
+                },
+            });
+            return res.data.response;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || error.message
+            );
+        }
+    }
+);
+
+export const createUser = createAsyncThunk(
+    "users/createUser",
+    async (userData, { rejectWithValue }) => {
+        try {
+            const { data } = await server.post("/users/create", userData);
+            return data.response;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data || "Error al crear usuario"
+            );
+        }
+    }
+);
 
 const logOut = createAction("logout", () => {
     ls.clear();
