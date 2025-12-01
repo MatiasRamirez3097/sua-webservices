@@ -1,3 +1,4 @@
+import CsvProcessor from "./csvProcessor/CsvProcessor";
 import Navbar from "./navbar/Navbar";
 import Footer from "./footer/Footer";
 import Button from "./button/Button";
@@ -10,9 +11,11 @@ import Modal from "./modal/Modal";
 import LoginForm from "./forms/LoginForm";
 import RoleGuard from "./roleGuard/RoleGuard";
 import ProtectedRoute from "./protectedRoute/ProtectedRoute";
+import Table from "./table/Table";
 
 export {
     Button,
+    CsvProcessor,
     Footer,
     Input,
     LoginForm,
@@ -24,4 +27,5 @@ export {
     Modal,
     ProtectedRoute,
     RoleGuard,
+    Table,
 };

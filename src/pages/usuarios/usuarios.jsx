@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createUser, getUsers } from "../../redux/actions/usersActions";
-import Div from "../../components/div/Div";
-import H2 from "../../components/h2/H2";
-import { Button, Label } from "../../components";
-import Input from "../../components/input/Input";
+import { Div, H2, Button, Label, Input, Table } from "../../components";
 
 const Usuarios = () => {
     const [modalOpen, setModalOpen] = useState(false);
