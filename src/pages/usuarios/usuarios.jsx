@@ -26,6 +26,36 @@ const Usuarios = () => {
         dispatch(getUsers());
     }, [dispatch]);
 
+    const handleDelete = async (id) => {
+        const confirmDelete = confirm(
+            "¿Seguro que deseas eliminar este usuario?"
+        );
+        if (!confirmDelete) return;
+
+        const res = await dispatch(deleteUser(id));
+
+        if (res.meta.requestStatus === "fulfilled") {
+            alert("Usuario eliminado");
+        } else {
+            alert("Error al borrar usuario");
+        }
+    };
+
+    const handleEdit = (user) => {
+        setFormData({
+            name: user.name,
+            surname: user.surname,
+            email: user.email,
+            password: "", // no mostrar la real
+        });
+        setRol(user.role);
+        setEditingId(user._id); // ← AGREGAR ESTE STATE
+        setModalOpen(true);
+    };
+
+    const [editMode, setEditMode] = useState(false);
+    const [editingId, setEditingId] = useState(null);
+
     return (
         <Div>
             <H2 label="GESTIÓN DE USUARIOS" />
@@ -66,12 +96,60 @@ const Usuarios = () => {
                                     <td className="px-4 py-2 text-left">
                                         {user.email}
                                     </td>
+
                                     <td>
                                         <div className="col-span-2 flex justify-center gap-3">
-                                            <button className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg w-24 text-center">
+                                            {/* BOTÓN EDITAR */}
+                                            <button
+                                                className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg w-24 text-center"
+                                                onClick={() => {
+                                                    setEditMode(true);
+                                                    setModalOpen(true);
+
+                                                    setFormData({
+                                                        name: user.name,
+                                                        surname: user.surname,
+                                                        email: user.email,
+                                                        password: "", // no se edita directamente
+                                                    });
+
+                                                    setRol(
+                                                        user.role || "lector"
+                                                    );
+                                                    setEditingId(user._id);
+                                                }}
+                                            >
                                                 Editar
                                             </button>
-                                            <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg w-24 text-center">
+
+                                            {/* BOTÓN ELIMINAR */}
+                                            <button
+                                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg w-24 text-center"
+                                                onClick={async () => {
+                                                    if (
+                                                        !confirm(
+                                                            "¿Eliminar este usuario?"
+                                                        )
+                                                    )
+                                                        return;
+
+                                                    const res = await dispatch(
+                                                        deleteUser(user._id)
+                                                    );
+
+                                                    if (
+                                                        res.meta
+                                                            .requestStatus ===
+                                                        "fulfilled"
+                                                    ) {
+                                                        dispatch(getUsers());
+                                                    } else {
+                                                        alert(
+                                                            "Error al eliminar usuario"
+                                                        );
+                                                    }
+                                                }}
+                                            >
                                                 Eliminar
                                             </button>
                                         </div>
@@ -190,30 +268,40 @@ const Usuarios = () => {
                                         if (
                                             !formData.name ||
                                             !formData.surname ||
-                                            !formData.email ||
-                                            !formData.password
+                                            !formData.email
                                         ) {
                                             return alert(
-                                                "Por favor complete todos los campos"
+                                                "Complete todos los campos"
                                             );
                                         }
-                                        const newUser = {
+
+                                        const userData = {
                                             ...formData,
                                             role: rol,
                                         };
 
-                                        const res = await dispatch(
-                                            createUser(newUser)
-                                        );
+                                        let res;
 
-                                        console.log("Usuario creado:", res);
+                                        if (editMode) {
+                                            // UPDATE
+                                            res = await dispatch(
+                                                updateUser({
+                                                    id: editingId,
+                                                    data: userData,
+                                                })
+                                            );
+                                        } else {
+                                            // CREATE
+                                            res = await dispatch(
+                                                createUser(userData)
+                                            );
+                                        }
 
                                         if (
                                             res.meta.requestStatus ===
                                             "fulfilled"
                                         ) {
                                             dispatch(getUsers());
-
                                             setFormData({
                                                 name: "",
                                                 surname: "",
@@ -221,14 +309,13 @@ const Usuarios = () => {
                                                 password: "",
                                             });
                                             setRol("lector");
+                                            setEditMode(false);
+                                            setEditingId(null);
                                             setModalOpen(false);
                                         }
-                                    } catch (error) {
-                                        console.error(
-                                            "Error al crear usuario:",
-                                            error
-                                        );
-                                        alert("Error al crear usuario");
+                                    } catch (e) {
+                                        console.error(e);
+                                        alert("Error en el procesamiento");
                                     }
                                 }}
                                 className="px-6 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-all shadow-md"
