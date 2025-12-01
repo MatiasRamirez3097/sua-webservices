@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createUser, getUsers } from "../../redux/actions/usersActions";
-import Div from "../../components/div/Div";
-import H2 from "../../components/h2/H2";
-import { Button, Label } from "../../components";
-import Input from "../../components/input/Input";
+import { Div, H2, Button, Label, Input, Table } from "../../components";
 
 const Usuarios = () => {
     const [modalOpen, setModalOpen] = useState(false);
@@ -40,47 +37,27 @@ const Usuarios = () => {
             </div>
 
             {/* Tabla */}
-            <div className="overflow-x-auto bg-gray-700 p-4 rounded-xl shadow-md">
-                <table className="min-w-full border-collapse text-white">
-                    <thead>
-                        <tr className="bg-gray-600 border border-gray-400">
-                            <th className="px-4 py-3 text-left">Nombre</th>
-                            <th className="px-4 py-3 text-left">Apellido</th>
-                            <th className="px-4 py-3 text-left">Email</th>
-                            <th className="px-4 py-3 text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {Array.isArray(users) &&
-                            users.map((user) => (
-                                <tr
-                                    key={user._id}
-                                    className="border border-gray-400 hover:bg-gray-700 transition"
-                                >
-                                    <td className="px-4 py-2 text-left">
-                                        {user.name}
-                                    </td>
-                                    <td className="px-4 py-2 text-left">
-                                        {user.surname}
-                                    </td>
-                                    <td className="px-4 py-2 text-left">
-                                        {user.email}
-                                    </td>
-                                    <td>
-                                        <div className="col-span-2 flex justify-center gap-3">
-                                            <button className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg w-24 text-center">
-                                                Editar
-                                            </button>
-                                            <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg w-24 text-center">
-                                                Eliminar
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                    </tbody>
-                </table>
-            </div>
+            <Table
+                data={users}
+                columns={[
+                    { header: "Nombre", key: "name" },
+                    { header: "Apellido", key: "surname" },
+                    { header: "Email", key: "email" },
+                    {
+                        header: "Acciones",
+                        render: (row) => (
+                            <div className="col-span-2 flex justify-center gap-3">
+                                <button className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg w-24 text-center">
+                                    Editar
+                                </button>
+                                <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg w-24 text-center">
+                                    Eliminar
+                                </button>
+                            </div>
+                        ),
+                    },
+                ]}
+            />
 
             {modalOpen && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">

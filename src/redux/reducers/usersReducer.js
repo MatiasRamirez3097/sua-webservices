@@ -47,7 +47,7 @@ const usersReducer = createReducer(initialState, (builder) =>
             console.log(action.payload);
             const newState = {
                 ...state,
-                users: action.payload.user,
+                user: action.payload.user,
                 token: action.payload.token,
                 status: action.payload.status,
             };
