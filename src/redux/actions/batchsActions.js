@@ -1,5 +1,6 @@
 import { createAction, createAsyncThunk } from "@reduxjs/toolkit";
 import { server } from "../../Api";
+import { ls } from "../../utils/ls.js";
 
 const leyendaAction = createAction("leyendaAction", (val) => {
     return {
@@ -18,6 +19,26 @@ const typeAction = createAction("typeAction", (val) => {
         payload: val,
     };
 });
+
+const getBatchs = createAsyncThunk(
+    "getBatchs",
+    async (_, { rejectWithValue }) => {
+        try {
+            const token = ls.getText("token");
+
+            const res = await server.get("/batchs", {
+                headers: {
+                    Authorization: "Bearer " + token,
+                },
+            });
+            return res.data.response;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || error.message
+            );
+        }
+    }
+);
 
 const postResolucion = createAsyncThunk(
     "postResolucion",
@@ -47,4 +68,10 @@ const postResolucion = createAsyncThunk(
     }
 );
 
-export { leyendaAction, postResolucion, fechaResolucionAction, typeAction };
+export {
+    leyendaAction,
+    getBatchs,
+    postResolucion,
+    fechaResolucionAction,
+    typeAction,
+};

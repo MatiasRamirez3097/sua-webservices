@@ -5,7 +5,7 @@ import {
     fechaResolucionAction,
     leyendaAction,
     postResolucion,
-} from "../../redux/actions/resolucionesActions";
+} from "../../redux/actions/batchsActions";
 
 import {
     CsvProcessor,
@@ -19,7 +19,7 @@ import {
 const Resoluciones = () => {
     const dispatch = useDispatch();
     const { errores, leyenda, fechaResolucion } = useSelector(
-        (store) => store.resolucionesReducer
+        (store) => store.batchsReducer
     );
     const { user } = useSelector((store) => store.usersReducer);
 

@@ -31,10 +31,10 @@ const Navbar = ({
 
                         <RoleGuard allowedRoles={["manager", "admin"]}>
                             <Link
-                                to="/intervenciones"
+                                to="/estadocargas"
                                 className="hover:text-indigo-400 transition-colors"
                             >
-                                Intervenciones
+                                Estado de cargas
                             </Link>
                             <Link
                                 to="/resoluciones"
