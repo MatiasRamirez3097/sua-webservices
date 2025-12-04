@@ -111,10 +111,24 @@ const authenticate = createAsyncThunk("authenticate", async () => {
 export const deleteUser = createAsyncThunk(
     "users/deleteUser",
     async (id, thunkAPI) => {
+        console.log("➡️ BASE URL:", server.defaults.baseURL);
+        console.log("➡️ FULL REQUEST:", `/users/softdelete/${id}`);
         try {
-            const res = await server.delete(`/users/delete/${id}`);
-            return id; // Devolvemos solo el ID borrado
+            const token = ls.getText("token");
+
+            const res = await server.put(
+                `/users/softdelete/${id}`,
+                {},
+                {
+                    headers: {
+                        Authorization: "Bearer " + token,
+                    },
+                }
+            );
+
+            return id;
         } catch (error) {
+            console.log("❌ ERROR AL BORRAR:", error);
             return thunkAPI.rejectWithValue(
                 error.response?.data || "Error al eliminar usuario"
             );
