@@ -7,10 +7,11 @@ import {
     signUp,
     getUsers,
     createUser,
+    deleteUser,
+    updateUser,
 } from "../actions/usersActions";
 
 const initialState = {
-    countries: [],
     users: [],
     token: null,
     user: {},
@@ -22,88 +23,121 @@ const initialState = {
 
 const usersReducer = createReducer(initialState, (builder) =>
     builder
+
         .addCase(signIn.fulfilled, (state, action) => {
-            const newState = { ...state, ...action.payload };
-            return newState;
+            return {
+                ...state,
+                token: action.payload.token,
+                user: action.payload.user,
+                status: "online",
+            };
         })
+
         .addCase(signUp.fulfilled, (state, action) => {
-            const newState = { ...state, ...action.payload };
-            return newState;
+            return {
+                ...state,
+                token: action.payload.token,
+                user: action.payload.user,
+                status: "online",
+            };
         })
-        .addCase(signUp.rejected, (state, action) => {
-            console.log(action.payload);
-            const newState = { ...state, ...action.payload };
-            return newState;
-        })
+
         .addCase(authenticate.fulfilled, (state, action) => {
-            const newState = { ...state, ...action.payload };
-            return newState;
+            return {
+                ...state,
+                user: action.payload.user,
+                status: "online",
+            };
         })
-        .addCase(logOut, (state, action) => {
-            const newState = { ...state, ...action.payload };
-            return newState;
+
+        .addCase(logOut, (state) => {
+            return {
+                ...initialState,
+                status: "offline",
+            };
         })
+
         .addCase(setUser, (state, action) => {
-            console.log(action.payload);
-            const newState = {
+            return {
                 ...state,
                 user: action.payload.user,
                 token: action.payload.token,
                 status: action.payload.status,
             };
-            return newState;
         })
 
         .addCase(getUsers.pending, (state) => {
-            const newState = {
+            return {
                 ...state,
                 loadingUsers: true,
+                error: null,
             };
-
-            return newState;
         })
+
         .addCase(getUsers.fulfilled, (state, action) => {
-            const newState = {
+            return {
                 ...state,
                 loadingUsers: false,
                 users: action.payload,
             };
-
-            return newState;
         })
+
         .addCase(getUsers.rejected, (state, action) => {
-            const newState = {
+            return {
                 ...state,
                 loadingUsers: false,
-                error: action.error.message,
+                error: action.error?.message ?? "Error al obtener usuarios",
             };
-
-            return newState;
         })
 
         .addCase(createUser.pending, (state) => {
-            const newState = {
+            return {
                 ...state,
                 loadingCreate: true,
                 error: null,
             };
-            return newState;
         })
+
         .addCase(createUser.fulfilled, (state, action) => {
-            const newState = {
+            return {
                 ...state,
                 loadingCreate: false,
                 users: [...state.users, action.payload],
             };
-            return newState;
         })
+
         .addCase(createUser.rejected, (state, action) => {
-            const newState = {
+            return {
                 ...state,
                 loadingCreate: false,
                 error: action.payload || "Error al crear usuario",
             };
-            return newState;
+        })
+        .addCase(deleteUser.fulfilled, (state, action) => {
+            return {
+                ...state,
+                users: state.users.filter((u) => u._id !== action.payload),
+            };
+        })
+        .addCase(deleteUser.rejected, (state, action) => {
+            return {
+                ...state,
+                error: action.payload || "No se pudo eliminar el usuario",
+            };
+        })
+        .addCase(updateUser.fulfilled, (state, action) => {
+            return {
+                ...state,
+                users: state.users.map((u) =>
+                    u._id === action.payload._id ? action.payload : u
+                ),
+            };
+        })
+        .addCase(updateUser.rejected, (state, action) => {
+            return {
+                ...state,
+                error: action.payload || "No se pudo actualizar el usuario",
+            };
         })
 );
 

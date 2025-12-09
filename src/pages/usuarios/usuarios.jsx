@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createUser, getUsers } from "../../redux/actions/usersActions";
+import {
+    createUser,
+    getUsers,
+    updateUser,
+    deleteUser,
+} from "../../redux/actions/usersActions";
 import { Div, H2, Button, Label, Input, Table } from "../../components";
 
 const Usuarios = () => {
@@ -13,6 +18,9 @@ const Usuarios = () => {
         password: "",
     });
 
+    const [editMode, setEditMode] = useState(false);
+    const [editingId, setEditingId] = useState(null);
+
     const dispatch = useDispatch();
 
     const { users, loadingUsers, error } = useSelector(
@@ -23,6 +31,46 @@ const Usuarios = () => {
         dispatch(getUsers());
     }, [dispatch]);
 
+    const resetForm = () => {
+        setFormData({
+            name: "",
+            surname: "",
+            email: "",
+            password: "",
+        });
+        setRol("lector");
+        setEditMode(false);
+        setEditingId(null);
+    };
+
+    const handleDelete = async (id) => {
+        const confirmDelete = confirm(
+            "¿Seguro que deseas eliminar este usuario?"
+        );
+        if (!confirmDelete) return;
+
+        const res = await dispatch(deleteUser(id));
+        if (res.meta.requestStatus === "fulfilled") {
+            alert("Usuario eliminado");
+            dispatch(getUsers());
+        } else {
+            alert("Error al borrar usuario");
+        }
+    };
+
+    const handleEdit = (user) => {
+        setFormData({
+            name: user.name,
+            surname: user.surname,
+            email: user.email,
+            password: "",
+        });
+        setRol(user.role);
+        setEditingId(user._id);
+        setEditMode(true);
+        setModalOpen(true);
+    };
+
     return (
         <Div>
             <H2 label="GESTIÓN DE USUARIOS" />
@@ -32,32 +80,43 @@ const Usuarios = () => {
                 <Button
                     text="Crear usuario"
                     className="bg-indigo-800 text-white rounded-xl hover:bg-indigo-700"
-                    onClick={() => setModalOpen(true)}
+                    onClick={() => {
+                        resetForm();
+                        setModalOpen(true);
+                    }}
                 />
             </div>
 
             {/* Tabla */}
-            <Table
-                data={users}
-                columns={[
-                    { header: "Nombre", key: "name" },
-                    { header: "Apellido", key: "surname" },
-                    { header: "Email", key: "email" },
-                    {
-                        header: "Acciones",
-                        render: (row) => (
-                            <div className="col-span-2 flex justify-center gap-3">
-                                <button className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg w-24 text-center">
-                                    Editar
-                                </button>
-                                <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg w-24 text-center">
-                                    Eliminar
-                                </button>
-                            </div>
-                        ),
-                    },
-                ]}
-            />
+            <div className="overflow-x-auto bg-gray-700 p-4 rounded-xl shadow-md">
+                <Table
+                    data={users}
+                    columns={[
+                        { header: "Nombre", key: "name" },
+                        { header: "Apellido", key: "surname" },
+                        { header: "Email", key: "email" },
+                        {
+                            header: "Acciones",
+                            render: (row) => (
+                                <div className="col-span-2 flex justify-center gap-3">
+                                    <button
+                                        className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg w-24 text-center"
+                                        onClick={() => handleEdit(row)}
+                                    >
+                                        Editar
+                                    </button>
+                                    <button
+                                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg w-24 text-center"
+                                        onClick={() => handleDelete(row._id)}
+                                    >
+                                        Eliminar
+                                    </button>
+                                </div>
+                            ),
+                        },
+                    ]}
+                />
+            </div>
 
             {modalOpen && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
@@ -65,11 +124,16 @@ const Usuarios = () => {
                         {/* Título */}
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-semibold text-white">
-                                Crear nuevo usuario
+                                {editMode
+                                    ? "Editar usuario"
+                                    : "Crear nuevo usuario"}
                             </h2>
 
                             <button
-                                onClick={() => setModalOpen(false)}
+                                onClick={() => {
+                                    resetForm();
+                                    setModalOpen(false);
+                                }}
                                 className="text-gray-400 hover:text-white transition-all text-xl"
                             >
                                 ✕
@@ -167,50 +231,58 @@ const Usuarios = () => {
                                         if (
                                             !formData.name ||
                                             !formData.surname ||
-                                            !formData.email ||
-                                            !formData.password
+                                            !formData.email
                                         ) {
                                             return alert(
-                                                "Por favor complete todos los campos"
+                                                "Complete todos los campos"
                                             );
                                         }
-                                        const newUser = {
+
+                                        const userData = {
                                             ...formData,
                                             role: rol,
                                         };
+                                        let res;
 
-                                        const res = await dispatch(
-                                            createUser(newUser)
-                                        );
-
-                                        console.log("Usuario creado:", res);
+                                        if (editMode) {
+                                            // UPDATE
+                                            res = await dispatch(
+                                                updateUser({
+                                                    id: editingId,
+                                                    data: userData,
+                                                })
+                                            );
+                                        } else {
+                                            // CREATE
+                                            res = await dispatch(
+                                                createUser(userData)
+                                            );
+                                        }
 
                                         if (
                                             res.meta.requestStatus ===
                                             "fulfilled"
                                         ) {
                                             dispatch(getUsers());
-
-                                            setFormData({
-                                                name: "",
-                                                surname: "",
-                                                email: "",
-                                                password: "",
-                                            });
-                                            setRol("lector");
+                                            resetForm();
                                             setModalOpen(false);
+                                        } else {
+                                            alert(
+                                                "Error al procesar la solicitud"
+                                            );
                                         }
-                                    } catch (error) {
-                                        console.error(
-                                            "Error al crear usuario:",
-                                            error
-                                        );
-                                        alert("Error al crear usuario");
+                                    } catch (e) {
+                                        console.error(e);
+                                        alert("Error en el procesamiento");
                                     }
                                 }}
                                 className="px-6 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-all shadow-md"
                             >
-                                Crear usuario
+                                <span>
+                                    {editMode
+                                        ? "Guardar cambios"
+                                        : "Crear usuario"}
+                                </span>
                             </button>
                         </div>
                     </div>
