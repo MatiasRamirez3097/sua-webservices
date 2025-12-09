@@ -2,8 +2,9 @@ import { createReducer } from "@reduxjs/toolkit";
 import {
     fechaResolucionAction,
     getBatchs,
+    getOneBatch,
     leyendaAction,
-    postResolucion,
+    postBatchs,
     typeAction,
 } from "../actions/batchsActions";
 
@@ -15,6 +16,7 @@ const initialState = {
     fechaResolucion: "",
     type: "RESOLUCION",
     batchs: [],
+    batch: {},
 };
 
 const batchsReducer = createReducer(initialState, (builder) =>
@@ -23,11 +25,11 @@ const batchsReducer = createReducer(initialState, (builder) =>
             const newState = { ...state, leyenda: action.payload };
             return newState;
         })
-        .addCase(postResolucion.fulfilled, (state, action) => {
+        .addCase(postBatchs.fulfilled, (state, action) => {
             const newState = { ...state, postStatus: action.payload };
             return newState;
         })
-        .addCase(postResolucion.rejected, (state, action) => {
+        .addCase(postBatchs.rejected, (state, action) => {
             const { anio, sua, err } = action.payload;
             state.errores.push({ anio, sua, err });
         })
@@ -45,6 +47,15 @@ const batchsReducer = createReducer(initialState, (builder) =>
         })
         .addCase(getBatchs.rejected, (state, action) => {
             const newState = { ...state, batchs: [] };
+            return newState;
+        })
+        .addCase(getOneBatch.fulfilled, (state, action) => {
+            const newState = { ...state, batch: action.payload };
+            console.log(newState);
+            return newState;
+        })
+        .addCase(getOneBatch.rejected, (state, action) => {
+            const newState = { ...state, batch: {} };
             return newState;
         })
 );

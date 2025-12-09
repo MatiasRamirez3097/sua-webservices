@@ -40,8 +40,31 @@ const getBatchs = createAsyncThunk(
     }
 );
 
-const postResolucion = createAsyncThunk(
-    "postResolucion",
+const getOneBatch = createAsyncThunk(
+    "getOneBatch",
+    async ({ id, onlyErrors = false }, { rejectWithValue }) => {
+        try {
+            const token = ls.getText("token");
+
+            const res = await server.get(`/batchs/getone/${id}`, {
+                headers: {
+                    Authorization: "Bearer " + token,
+                },
+                params: {
+                    onlyErrors: onlyErrors,
+                },
+            });
+            return res.data.response;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || error.message
+            );
+        }
+    }
+);
+
+const postBatchs = createAsyncThunk(
+    "postBatchs",
     async (
         { type, date, scheduledFor, data, records },
         { rejectWithValue }
@@ -54,7 +77,7 @@ const postResolucion = createAsyncThunk(
                 data: data,
                 records: records,
             };
-            const res = await server.post(`/resoluciones`, payload);
+            const res = await server.post(`/batchs`, payload);
             return res.data.response;
         } catch (err) {
             const msg = err.response?.data?.detail || "Error desconocido";
@@ -71,7 +94,8 @@ const postResolucion = createAsyncThunk(
 export {
     leyendaAction,
     getBatchs,
-    postResolucion,
+    getOneBatch,
+    postBatchs,
     fechaResolucionAction,
     typeAction,
 };

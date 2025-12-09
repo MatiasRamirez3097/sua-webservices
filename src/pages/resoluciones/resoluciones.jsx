@@ -4,7 +4,7 @@ import Papa from "papaparse"; // Importamos papaparse
 import {
     fechaResolucionAction,
     leyendaAction,
-    postResolucion,
+    postBatchs,
 } from "../../redux/actions/batchsActions";
 
 import {
@@ -100,7 +100,7 @@ const Resoluciones = () => {
         setStatus("Procesando... por favor espera.");
         try {
             await dispatch(
-                postResolucion({
+                postBatchs({
                     type: "RESOLUCION",
                     date: fechaResolucion,
                     scheduledFor: fechaResolucion,
