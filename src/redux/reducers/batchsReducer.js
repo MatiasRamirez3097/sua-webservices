@@ -1,5 +1,6 @@
 import { createReducer } from "@reduxjs/toolkit";
 import {
+    fechaEjecucionAction,
     fechaResolucionAction,
     getBatchs,
     getOneBatch,
@@ -13,6 +14,7 @@ const initialState = {
     leyenda: "",
     postStatus: "",
     errores: [],
+    fechaEjecucion: "",
     fechaResolucion: "",
     type: "RESOLUCION",
     batchs: [],
@@ -32,6 +34,10 @@ const batchsReducer = createReducer(initialState, (builder) =>
         .addCase(postBatchs.rejected, (state, action) => {
             const { anio, sua, err } = action.payload;
             state.errores.push({ anio, sua, err });
+        })
+        .addCase(fechaEjecucionAction, (state, action) => {
+            const newState = { ...state, fechaEjecucion: action.payload };
+            return newState;
         })
         .addCase(fechaResolucionAction, (state, action) => {
             const newState = { ...state, fechaResolucion: action.payload };

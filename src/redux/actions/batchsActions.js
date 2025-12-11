@@ -8,6 +8,12 @@ const leyendaAction = createAction("leyendaAction", (val) => {
     };
 });
 
+const fechaEjecucionAction = createAction("fechaEjecucionAction", (val) => {
+    return {
+        payload: val,
+    };
+});
+
 const fechaResolucionAction = createAction("fechaResolucionAction", (val) => {
     return {
         payload: val,
@@ -96,6 +102,7 @@ export {
     getBatchs,
     getOneBatch,
     postBatchs,
+    fechaEjecucionAction,
     fechaResolucionAction,
     typeAction,
 };
