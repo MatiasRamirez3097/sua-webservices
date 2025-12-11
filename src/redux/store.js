@@ -1,10 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit";
-import resolucionesReducer from "./reducers/resolucionesReducer";
+import batchsReducer from "./reducers/batchsReducer";
 import usersReducer from "./reducers/usersReducer";
 
 export const store = configureStore({
     reducer: {
-        resolucionesReducer,
+        batchsReducer,
         usersReducer,
     },
 });

@@ -1,28 +1,25 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import Papa from "papaparse"; // Importamos papaparse
 import {
     fechaResolucionAction,
     leyendaAction,
-    postResolucion,
-} from "../../redux/actions/resolucionesActions";
-import Papa from "papaparse"; // Importamos papaparse
+    postBatchs,
+} from "../../redux/actions/batchsActions";
 
-import CsvProcessor from "../../components/csv/CsvProcessor";
-
-import TextArea from "../../components/textarea/TextArea";
-
-import H2 from "../../components/h2/H2";
-
-import Input from "../../components/input/Input";
-
-import Div from "../../components/div/Div";
-
-import { Label } from "../../components";
+import {
+    CsvProcessor,
+    Div,
+    H2,
+    Input,
+    Label,
+    TextArea,
+} from "../../components";
 
 const Resoluciones = () => {
     const dispatch = useDispatch();
     const { errores, leyenda, fechaResolucion } = useSelector(
-        (store) => store.resolucionesReducer
+        (store) => store.batchsReducer
     );
     const { user } = useSelector((store) => store.usersReducer);
 
@@ -94,38 +91,31 @@ const Resoluciones = () => {
 
     // Itera y envía los datos a la API
     const handleProcessAPI = async () => {
+        console.log(leyenda);
         if (jsonData.length === 0) {
             alert("No hay datos para procesar. Carga un CSV.");
             return;
         }
 
         setStatus("Procesando... por favor espera.");
-
-        let count = 0;
-        for (const [index, row] of jsonData.entries()) {
-            count++;
-            setStatus(`Procesando fila ${count} de ${jsonData.length}...`);
-            try {
-                await dispatch(
-                    postResolucion({
-                        sua: row.sua,
-                        anio: row.anio,
+        try {
+            await dispatch(
+                postBatchs({
+                    type: "RESOLUCION",
+                    date: fechaResolucion,
+                    scheduledFor: fechaResolucion,
+                    data: {
                         leyenda: leyenda,
-                        fecha: fechaResolucion,
-                        token: user.token,
-                    })
-                ).unwrap();
-
-                setRowStatus((prev) => ({ ...prev, [index]: "success" }));
-            } catch (error) {
-                console.error("Error en fila:", index, error);
-                setRowStatus((prev) => ({ ...prev, [index]: "error" }));
-            }
+                        tipoResolucion: 1,
+                        id_motivo_cierre: 0,
+                    },
+                    records: jsonData,
+                })
+            );
+        } catch (error) {
+            console.error("Error!");
         }
-
-        if (count === jsonData.length) {
-            setStatus("¡Proceso completado! Todas las filas fueron enviadas.");
-        }
+        setStatus("Agendado correctamente");
     };
 
     return (
