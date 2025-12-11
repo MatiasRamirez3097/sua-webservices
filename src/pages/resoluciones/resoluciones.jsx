@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Papa from "papaparse"; // Importamos papaparse
 import {
+    fechaEjecucionAction,
     fechaResolucionAction,
     leyendaAction,
     postBatchs,
@@ -18,7 +19,7 @@ import {
 
 const Resoluciones = () => {
     const dispatch = useDispatch();
-    const { errores, leyenda, fechaResolucion } = useSelector(
+    const { errores, leyenda, fechaEjecucion, fechaResolucion } = useSelector(
         (store) => store.batchsReducer
     );
     const { user } = useSelector((store) => store.usersReducer);
@@ -34,6 +35,8 @@ const Resoluciones = () => {
         if (e.target.name == "leyenda") dispatch(leyendaAction(e.target.value));
         else if (e.target.name == "fecha")
             dispatch(fechaResolucionAction(e.target.value));
+        else if (e.target.name == "fechaEjecucion")
+            dispatch(fechaEjecucionAction(e.target.value));
     };
     // Maneja la selección del archivo
     const handleFileChange = (e) => {
@@ -103,7 +106,7 @@ const Resoluciones = () => {
                 postBatchs({
                     type: "RESOLUCION",
                     date: fechaResolucion,
-                    scheduledFor: fechaResolucion,
+                    scheduledFor: fechaEjecucion,
                     data: {
                         leyenda: leyenda,
                         tipoResolucion: 1,
@@ -136,6 +139,16 @@ const Resoluciones = () => {
                     <Input
                         value={fechaResolucion}
                         name="fecha"
+                        onChange={(e) => onChange(e)}
+                        type="datetime-local"
+                        step="1"
+                    />
+                </div>
+                <div className="flex-1">
+                    <Label label="Fecha y hora ejecucion" />
+                    <Input
+                        value={fechaEjecucion}
+                        name="fechaEjecucion"
                         onChange={(e) => onChange(e)}
                         type="datetime-local"
                         step="1"

@@ -92,7 +92,7 @@ const EstadoCargas = () => {
                                             className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg w-24 text-center"
                                             text="Cambiar fecha ejecucion"
                                         />
-                                        <button
+                                        <Button
                                             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg w-24 text-center"
                                             text="Eliminar"
                                         />
