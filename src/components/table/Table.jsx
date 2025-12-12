@@ -10,15 +10,15 @@ const Table = ({ columns, data }) => {
     }
 
     return (
-        <div className="overflow-x-auto rounded-lg shadow-lg">
-            <table className="w-full text-left text-sm text-gray-300">
+        <div className="overflow-x-auto overflow-y-auto max-h-80 rounded-lg shadow border border-gray-700 mt-6">
+            <table className="w-full border text-center border-gray-600 border-collapse rounded-lg overflow-hidden text-white">
                 {/* CABECERA */}
-                <thead className="bg-gray-700 text-xs uppercase text-gray-100">
+                <thead className="bg-gray-400 text-black">
                     <tr>
                         {columns.map((col) => (
                             <th
                                 key={col.key || col.header}
-                                className="px-6 py-3"
+                                className="px-4 py-2 text-center font-bold border border-gray-700 uppercase"
                             >
                                 {col.header}
                             </th>
@@ -27,16 +27,18 @@ const Table = ({ columns, data }) => {
                 </thead>
 
                 {/* CUERPO */}
-                <tbody className="bg-gray-800 divide-y divide-gray-700">
-                    {data.map((row) => (
+                <tbody className="text-white">
+                    {data.map((row, index) => (
                         <tr
-                            key={row._id}
-                            className="hover:bg-gray-700 transition-colors"
+                            key={row._id ?? index}
+                            className={`${
+                                index % 2 === 0 ? "bg-gray-800" : "bg-gray-900"
+                            } hover:bg-gray-700 transition-colors`}
                         >
                             {columns.map((col, colIndex) => (
                                 <td
                                     key={col.key || colIndex}
-                                    className="px-6 py-4"
+                                    className="px-4 py-2 border border-gray-700 text-center"
                                 >
                                     {col.render
                                         ? col.render(row)
