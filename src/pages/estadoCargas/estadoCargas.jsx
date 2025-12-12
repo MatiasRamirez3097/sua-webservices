@@ -87,28 +87,28 @@ const EstadoCargas = () => {
                     {
                         header: "Acciones",
                         render: (row) => (
-                            <div className="flex justify-center gap-3">
+                            <div className="flex justify-center items-center gap-3">
                                 {row.status === "PENDING" ? (
                                     <>
                                         <Button
-                                            className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-xl px-4 py-2 text-center leading-tight h-[80px] flex items-center justify-center"
+                                            className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
                                             text="Cambiar fecha ejecucion"
                                         />
                                         <Button
-                                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg w-24 text-center"
+                                            className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
                                             text="Eliminar"
                                         />
                                     </>
                                 ) : row.status === "COMPLETED" &&
                                   row.errorsCount > 0 ? (
                                     <Button
-                                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg w-24 text-center"
+                                        className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
                                         text="Ver errores"
                                         onClick={() => getErrors(row._id)}
                                     />
                                 ) : (
                                     <Button
-                                        className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg w-24 text-center"
+                                        className="bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
                                         text="Ver Resultados"
                                     ></Button>
                                 )}
