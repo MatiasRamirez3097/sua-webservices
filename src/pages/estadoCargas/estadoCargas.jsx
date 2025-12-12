@@ -18,6 +18,8 @@ const EstadoCargas = () => {
             getOneBatch({
                 id: id,
                 onlyErrors: true,
+                fields: "date",
+                itemsFields: "sua,year,errorDetail",
             })
         );
         setModal(true);
@@ -150,7 +152,7 @@ const EstadoCargas = () => {
                             <Button text="OK" onClick={() => setModal(false)} />
                             <Button
                                 text="Descargar errores"
-                                onClick={downloadErrors(batch.items)}
+                                onClick={() => downloadErrors(batch.items)}
                             />
                         </Div>
                     )}
