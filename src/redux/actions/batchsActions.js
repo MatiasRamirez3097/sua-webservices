@@ -48,7 +48,10 @@ const getBatchs = createAsyncThunk(
 
 const getOneBatch = createAsyncThunk(
     "getOneBatch",
-    async ({ id, onlyErrors = false }, { rejectWithValue }) => {
+    async (
+        { id, onlyErrors = false, fields = undefined, itemsFields = undefined },
+        { rejectWithValue }
+    ) => {
         try {
             const token = ls.getText("token");
 
@@ -57,6 +60,8 @@ const getOneBatch = createAsyncThunk(
                     Authorization: "Bearer " + token,
                 },
                 params: {
+                    fields: fields ? fields : "",
+                    itemsFields: itemsFields ? itemsFields : "",
                     onlyErrors: onlyErrors,
                 },
             });

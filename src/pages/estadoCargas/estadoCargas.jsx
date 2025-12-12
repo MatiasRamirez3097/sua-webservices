@@ -18,6 +18,8 @@ const EstadoCargas = () => {
             getOneBatch({
                 id: id,
                 onlyErrors: true,
+                fields: "date",
+                itemsFields: "sua,year,errorDetail",
             })
         );
         setModal(true);
@@ -85,11 +87,11 @@ const EstadoCargas = () => {
                     {
                         header: "Acciones",
                         render: (row) => (
-                            <div className="col-span-2 flex justify-center gap-3">
+                            <div className="flex justify-center gap-3">
                                 {row.status === "PENDING" ? (
                                     <>
                                         <Button
-                                            className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg w-24 text-center"
+                                            className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-xl px-4 py-2 text-center leading-tight h-[80px] flex items-center justify-center"
                                             text="Cambiar fecha ejecucion"
                                         />
                                         <Button
@@ -105,7 +107,10 @@ const EstadoCargas = () => {
                                         onClick={() => getErrors(row._id)}
                                     />
                                 ) : (
-                                    <Button text="Ver Resultados"></Button>
+                                    <Button
+                                        className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg w-24 text-center"
+                                        text="Ver Resultados"
+                                    ></Button>
                                 )}
                             </div>
                         ),
@@ -116,17 +121,25 @@ const EstadoCargas = () => {
                 <Modal>
                     {Object.keys(batch).length > 0 && (
                         <Div>
-                            <table>
-                                <thead>
+                            <table className="w-full border-collapse border border-gray-700 text-white my-4">
+                                <thead className="bg-gray-700 text-center">
                                     <tr>
-                                        <th>FECHA</th>
-                                        <th>Tipo</th>
+                                        <th className="border border-gray-600 px-3 py-2">
+                                            FECHA
+                                        </th>
+                                        <th className="border border-gray-600 px-3 py-2">
+                                            Tipo
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>{batch.date}</td>
-                                        <td>{batch.processType}</td>
+                                    <tr className="bg-gray-800">
+                                        <td className="border border-gray-700 text-center px-3 py-2">
+                                            {batch.date}
+                                        </td>
+                                        <td className="border border-gray-700 text-center px-3 py-2">
+                                            {batch.processType}
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -147,11 +160,19 @@ const EstadoCargas = () => {
                                     },
                                 ]}
                             />
-                            <Button text="OK" onClick={() => setModal(false)} />
-                            <Button
-                                text="Descargar errores"
-                                onClick={downloadErrors(batch.items)}
-                            />
+                            <div className="flex justify-center items-center gap-4 mt-4">
+                                <Button
+                                    text="OK"
+                                    onClick={() => setModal(false)}
+                                    className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg px-4 py-2 flex items-center justify-center"
+                                />
+
+                                <Button
+                                    text="Descargar errores"
+                                    onClick={() => downloadErrors(batch.items)}
+                                    className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg px-4 py-2 flex items-center justify-center whitespace-nowrap"
+                                />
+                            </div>
                         </Div>
                     )}
                 </Modal>
