@@ -4,6 +4,7 @@ import Papa from "papaparse"; // Importamos papaparse
 import {
     fechaEjecucionAction,
     fechaResolucionAction,
+    idAreaAction,
     leyendaAction,
     postBatchs,
 } from "../../redux/actions/batchsActions";
@@ -14,14 +15,14 @@ import {
     H2,
     Input,
     Label,
+    Select,
     TextArea,
 } from "../../components";
 
 const Resoluciones = () => {
     const dispatch = useDispatch();
-    const { errores, leyenda, fechaEjecucion, fechaResolucion } = useSelector(
-        (store) => store.batchsReducer
-    );
+    const { errores, idArea, leyenda, fechaEjecucion, fechaResolucion } =
+        useSelector((store) => store.batchsReducer);
     const { user } = useSelector((store) => store.usersReducer);
 
     const [file, setFile] = useState(null);
@@ -37,6 +38,9 @@ const Resoluciones = () => {
             dispatch(fechaResolucionAction(e.target.value));
         else if (e.target.name == "fechaEjecucion")
             dispatch(fechaEjecucionAction(e.target.value));
+        else if (e.target.name == "idArea") {
+            dispatch(idAreaAction(e.target.value));
+        }
     };
     // Maneja la selección del archivo
     const handleFileChange = (e) => {
@@ -104,6 +108,7 @@ const Resoluciones = () => {
         try {
             await dispatch(
                 postBatchs({
+                    idArea: idArea,
                     type: "RESOLUCION",
                     date: fechaResolucion,
                     scheduledFor: fechaEjecucion,
@@ -155,6 +160,26 @@ const Resoluciones = () => {
                     />
                 </div>
             </div>
+            <Div>
+                <div className="flex-1">
+                    <Label label="Area de SUA" />
+                    <Select
+                        name="idArea"
+                        value={idArea}
+                        onChange={(e) => onChange(e)}
+                        options={[
+                            {
+                                value: 2098,
+                                text: "Parques y Paseos",
+                            },
+                            {
+                                value: 2115,
+                                text: "Parques y Paseos futuras planificaciones",
+                            },
+                        ]}
+                    />
+                </div>
+            </Div>
             <CsvProcessor
                 errores={errores}
                 file={file}

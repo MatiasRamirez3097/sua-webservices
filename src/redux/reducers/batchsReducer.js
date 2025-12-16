@@ -4,6 +4,7 @@ import {
     fechaResolucionAction,
     getBatchs,
     getOneBatch,
+    idAreaAction,
     leyendaAction,
     postBatchs,
     typeAction,
@@ -11,6 +12,7 @@ import {
 
 const initialState = {
     csvResoluciones: null,
+    idArea: 2098,
     leyenda: "",
     postStatus: "",
     errores: [],
@@ -43,7 +45,12 @@ const batchsReducer = createReducer(initialState, (builder) =>
             const newState = { ...state, fechaResolucion: action.payload };
             return newState;
         })
+        .addCase(idAreaAction, (state, action) => {
+            const newState = { ...state, idArea: action.payload };
+            return newState;
+        })
         .addCase(typeAction, (state, action) => {
+            alert(action.payload);
             const newState = { ...state, type: action.payload };
             return newState;
         })

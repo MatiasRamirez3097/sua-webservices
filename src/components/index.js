@@ -12,6 +12,7 @@ import LoginForm from "./forms/LoginForm";
 import RoleGuard from "./roleGuard/RoleGuard";
 import ProtectedRoute from "./protectedRoute/ProtectedRoute";
 import Table from "./table/Table";
+import Select from "./select/Select";
 
 export {
     Button,
@@ -27,5 +28,6 @@ export {
     Modal,
     ProtectedRoute,
     RoleGuard,
+    Select,
     Table,
 };
