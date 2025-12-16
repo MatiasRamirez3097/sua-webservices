@@ -20,6 +20,12 @@ const fechaResolucionAction = createAction("fechaResolucionAction", (val) => {
     };
 });
 
+const idAreaAction = createAction("idAreaAction", (val) => {
+    return {
+        payload: val,
+    };
+});
+
 const typeAction = createAction("typeAction", (val) => {
     return {
         payload: val,
@@ -77,11 +83,12 @@ const getOneBatch = createAsyncThunk(
 const postBatchs = createAsyncThunk(
     "postBatchs",
     async (
-        { type, date, scheduledFor, data, records },
+        { type, date, idArea, scheduledFor, data, records },
         { rejectWithValue }
     ) => {
         try {
             const payload = {
+                idArea: idArea,
                 type: type,
                 date: date,
                 scheduledFor: scheduledFor,
@@ -103,6 +110,7 @@ const postBatchs = createAsyncThunk(
 );
 
 export {
+    idAreaAction,
     leyendaAction,
     getBatchs,
     getOneBatch,
