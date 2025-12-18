@@ -7,6 +7,7 @@ import {
     deleteUser,
 } from "../../redux/actions/usersActions";
 import { Div, H2, Button, Label, Input, Table } from "../../components";
+import { sweetAlert } from "../../components/alerts/SweetAlert";
 
 const Usuarios = () => {
     const [modalOpen, setModalOpen] = useState(false);
@@ -44,17 +45,32 @@ const Usuarios = () => {
     };
 
     const handleDelete = async (id) => {
-        const confirmDelete = confirm(
-            "¿Seguro que deseas eliminar este usuario?"
-        );
-        if (!confirmDelete) return;
+        const result = await sweetAlert.fire({
+            type: "warning",
+            title: "Eliminar usuario",
+            message: "Esta acción no se puede deshacer.",
+            showCancelButton: true,
+            confirmButtonText: "Eliminar",
+            cancelButtonText: "Cancelar",
+        });
+
+        if (!result.isConfirmed) return;
 
         const res = await dispatch(deleteUser(id));
+
         if (res.meta.requestStatus === "fulfilled") {
-            alert("Usuario eliminado");
+            await sweetAlert.fire({
+                type: "success",
+                title: "Usuario eliminado",
+                message: "El usuario fue eliminado correctamente.",
+            });
             dispatch(getUsers());
         } else {
-            alert("Error al borrar usuario");
+            sweetAlert.fire({
+                type: "error",
+                title: "Error",
+                message: "No se pudo eliminar el usuario.",
+            });
         }
     };
 
@@ -233,9 +249,33 @@ const Usuarios = () => {
                                             !formData.surname ||
                                             !formData.email
                                         ) {
-                                            return alert(
-                                                "Complete todos los campos"
-                                            );
+                                            return sweetAlert.fire({
+                                                type: "warning",
+                                                title: "Campos incompletos",
+                                                message:
+                                                    "Nombre, apellido y email son obligatorios.",
+                                            });
+                                        }
+
+                                        if (!editMode && !formData.password) {
+                                            return sweetAlert.fire({
+                                                type: "warning",
+                                                title: "Contraseña requerida",
+                                                message:
+                                                    "Debe ingresar una contraseña para crear el usuario.",
+                                            });
+                                        }
+
+                                        if (
+                                            formData.password &&
+                                            formData.password.length < 6
+                                        ) {
+                                            return sweetAlert.fire({
+                                                type: "warning",
+                                                title: "Contraseña inválida",
+                                                message:
+                                                    "La contraseña debe tener al menos una mayuscula, una minuscula, un numero, un caracter especial y un minimo de 8 caracteres.",
+                                            });
                                         }
 
                                         const userData = {
@@ -263,17 +303,35 @@ const Usuarios = () => {
                                             res.meta.requestStatus ===
                                             "fulfilled"
                                         ) {
+                                            await sweetAlert.fire({
+                                                type: "success",
+                                                title: editMode
+                                                    ? "Usuario actualizado"
+                                                    : "Usuario creado",
+                                                message: editMode
+                                                    ? "Los cambios se guardaron correctamente."
+                                                    : "El usuario fue creado con éxito.",
+                                            });
+
                                             dispatch(getUsers());
                                             resetForm();
                                             setModalOpen(false);
                                         } else {
-                                            alert(
-                                                "Error al procesar la solicitud"
-                                            );
+                                            sweetAlert.fire({
+                                                type: "error",
+                                                title: "Error",
+                                                message:
+                                                    "No se pudo procesar la solicitud.",
+                                            });
                                         }
                                     } catch (e) {
                                         console.error(e);
-                                        alert("Error en el procesamiento");
+                                        sweetAlert.fire({
+                                            type: "error",
+                                            title: "Error inesperado",
+                                            message:
+                                                "Ocurrió un error al procesar la operación.",
+                                        });
                                     }
                                 }}
                                 className="px-6 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-all shadow-md"
