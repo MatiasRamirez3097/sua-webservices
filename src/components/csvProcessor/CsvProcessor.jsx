@@ -19,10 +19,10 @@ const CsvProcessor = ({
         if (!rowStatus) return {};
 
         const state = rowStatus[index];
-        if (state === "success") return { backgroundColor: "#d4edda" }; // Verde
-        if (state === "error") return { backgroundColor: "#f8d7da" }; // Rojo
+        if (state === "success") return { backgroundColor: "#d4edda" };
+        if (state === "error") return { backgroundColor: "#f8d7da" };
 
-        return {}; // Sin color
+        return {};
     };
 
     return (
@@ -122,18 +122,14 @@ const CsvProcessor = ({
                 </div>
             )}
 
-            {/* Tabla: se muestra solo si hay datos cargados */}
             {jsonData.length > 0 && (
                 <div className="mt-6">
-                    {/* Subtítulo de la tabla */}
                     <h3 className="text-lg font-semibold mb-3 text-white">
                         Datos del CSV
                     </h3>
 
-                    {/* Contenedor de tabla con scroll horizontal y sombra */}
                     <div className="overflow-x-auto overflow-y-auto max-h-80 rounded-lg shadow border border-black">
                         <table className="w-full border text-center border-gray-300 border-collapse rounded-lg overflow-hidden">
-                            {/* Encabezados: fondo gris y texto en mayúscula */}
                             <thead className="bg-gray-400 text-black">
                                 <tr>
                                     {headers.map((header) => (
@@ -144,16 +140,16 @@ const CsvProcessor = ({
                                             {header}
                                         </th>
                                     ))}
-                                    <th className="px-4 py-2 text-center font-bold border border-black-400">
-                                        Resultado
-                                    </th>
                                 </tr>
                             </thead>
 
                             {/* Filas del cuerpo: colores alternados (blanco / gris claro) */}
                             <tbody className="text-white">
                                 {jsonData.map((row, index) => (
-                                    <tr key={index} className="even:bg-gray-800 odd:bg-gray-900">
+                                    <tr
+                                        key={index}
+                                        className="even:bg-gray-800 odd:bg-gray-900"
+                                    >
                                         {headers.map((header) => (
                                             <td
                                                 key={`${index}-${header}`}
@@ -162,22 +158,6 @@ const CsvProcessor = ({
                                                 {row[header]}
                                             </td>
                                         ))}
-                                        {/* Celda de resultado con color + icono */}
-                                        <td
-                                            className={`
-                                                px-4 py-2 border border-gray-700 font-bold text-lg
-                                                ${
-                                                    rowStatus[index] === "success"
-                                                        ? "bg-green-700/30 text-white"
-                                                        : rowStatus[index] === "error"
-                                                        ? "bg-red-700/30 text-white"
-                                                        : "bg-gray-700"
-                                                }
-                                            `}
-                                        >
-                                            {rowStatus[index] === "success" && "✔️"}
-                                            {rowStatus[index] === "error" && "❌"}
-                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

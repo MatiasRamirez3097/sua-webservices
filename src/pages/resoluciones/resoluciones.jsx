@@ -32,6 +32,8 @@ const Resoluciones = () => {
 
     const [rowStatus, setRowStatus] = useState({});
 
+    const [formError, setFormError] = useState("");
+
     const onChange = (e) => {
         if (e.target.name == "leyenda") dispatch(leyendaAction(e.target.value));
         else if (e.target.name == "fecha")
@@ -98,7 +100,15 @@ const Resoluciones = () => {
 
     // Itera y envía los datos a la API
     const handleProcessAPI = async () => {
-        console.log(leyenda);
+        if (!isFormComplete) {
+            setFormError(
+                "No es posible procesar las filas. Debe completar todos los campos obligatorios."
+            );
+            return;
+        }
+
+        setFormError("");
+
         if (jsonData.length === 0) {
             alert("No hay datos para procesar. Carga un CSV.");
             return;
@@ -125,6 +135,13 @@ const Resoluciones = () => {
         }
         setStatus("Agendado correctamente");
     };
+
+    const isFormComplete =
+        leyenda?.trim() !== "" &&
+        fechaResolucion !== "" &&
+        fechaEjecucion !== "" &&
+        idArea !== null &&
+        idArea !== "";
 
     return (
         <Div>
@@ -180,6 +197,11 @@ const Resoluciones = () => {
                     />
                 </div>
             </Div>
+            {formError && (
+                <p className="text-red-500 text-md mt-2 mb-6 text-center font-semibold">
+                    {formError}
+                </p>
+            )}
             <CsvProcessor
                 errores={errores}
                 file={file}
