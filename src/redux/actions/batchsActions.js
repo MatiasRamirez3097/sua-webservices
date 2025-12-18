@@ -109,6 +109,25 @@ const postBatchs = createAsyncThunk(
     }
 );
 
+export const rescheduleBatch = createAsyncThunk(
+    "rescheduleBatch",
+    async ({ id, newDate }, { rejectWithValue }) => {
+        try {
+            const token = ls.get("token");
+            const res = await server.patch(
+                `/batchs/reschedule/${id}`,
+                { newDate },
+                { headers: { Authorization: "Bearer " + token } }
+            );
+            return res.data.response;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || error.message
+            );
+        }
+    }
+);
+
 export {
     idAreaAction,
     leyendaAction,
@@ -117,5 +136,6 @@ export {
     postBatchs,
     fechaEjecucionAction,
     fechaResolucionAction,
+    rescheduleBatch,
     typeAction,
 };

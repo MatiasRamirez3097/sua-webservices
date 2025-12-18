@@ -39,6 +39,23 @@ const EstadoCargas = () => {
         document.body.removeChild(link);
     };
 
+    const isEditable = (batch) => {
+        if (batch.status !== "PENDING") return false;
+
+        if (!batch.scheduledFor) return false;
+
+        const now = new Date();
+        const scheduledTime = new Date(batch.scheduledFor);
+        const diff = scheduledTime - now;
+        const ONE_HOUR = 60 * 60 * 1000;
+
+        return diff > ONE_HOUR;
+    };
+
+    const handleScheduledEdit = (id) => {
+        
+    }
+
     return (
         <Div className="w-full max-w-6xl mx-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8">
             <Table
@@ -90,10 +107,12 @@ const EstadoCargas = () => {
                             <div className="flex justify-center items-center gap-3">
                                 {row.status === "PENDING" ? (
                                     <>
-                                        <Button
-                                            className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
-                                            text="Cambiar fecha ejecucion"
-                                        />
+                                        {isEditable && (
+                                            <Button
+                                                className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
+                                                text="Cambiar fecha ejecucion"
+                                            />
+                                        )}
                                         <Button
                                             className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
                                             text="Eliminar"
