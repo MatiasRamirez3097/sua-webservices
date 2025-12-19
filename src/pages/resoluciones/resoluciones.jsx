@@ -19,6 +19,8 @@ import {
     TextArea,
 } from "../../components";
 
+import { sweetAlert } from "../../components/alerts/SweetAlert";
+
 const Resoluciones = () => {
     const dispatch = useDispatch();
     const { errores, idArea, leyenda, fechaEjecucion, fechaResolucion } =
@@ -76,7 +78,11 @@ const Resoluciones = () => {
     // Parsea el CSV cuando se presiona el botón "Cargar"
     const handleParse = () => {
         if (!file) {
-            alert("Por favor, selecciona un archivo CSV primero.");
+            sweetAlert.fire({
+                type: "warning",
+                title: "Archivo requerido",
+                message: "Debe seleccionar un archivo CSV antes de continuar.",
+            });
             return;
         }
 
@@ -84,27 +90,78 @@ const Resoluciones = () => {
             header: true, // ¡Importante! Trata la primera fila como cabecera
             skipEmptyLines: true,
             complete: (results) => {
-                // results.data es un array de objetos
-                // results.meta.fields son los nombres de las columnas
+                if (results.data.length === 0) {
+                    sweetAlert.fire({
+                        type: "warning",
+                        title: "Archivo vacío",
+                        message:
+                            "El archivo CSV no contiene registros válidos.",
+                    });
+                    return;
+                }
+
                 setJsonData(results.data);
                 setHeaders(results.meta.fields);
+
+                sweetAlert.fire({
+                    type: "success",
+                    title: "Archivo cargado",
+                    message: `Se cargaron ${results.data.length} registros correctamente.`,
+                });
             },
-            error: (error) => {
-                console.error("Error al parsear el CSV:", error);
-                setStatus("Error al leer el archivo.");
+
+            error: () => {
+                sweetAlert.fire({
+                    type: "error",
+                    title: "Error",
+                    message: "No se pudo leer el archivo CSV.",
+                });
             },
         });
     };
 
+    const isFormComplete = () => {
+        return (
+            resolutionText?.trim() !== "" &&
+            selectedType !== "" &&
+            executionDate !== ""
+        );
+    };
+
     // Itera y envía los datos a la API
     const handleProcessAPI = async () => {
-        console.log(leyenda);
-        if (jsonData.length === 0) {
-            alert("No hay datos para procesar. Carga un CSV.");
+        if (!isFormComplete) {
+            sweetAlert.fire({
+                type: "warning",
+                title: "Formulario incompleto",
+                message:
+                    "Debe completar todos los campos obligatorios antes de procesar.",
+            });
             return;
         }
 
+        if (jsonData.length === 0) {
+            sweetAlert.fire({
+                type: "info",
+                title: "Sin datos",
+                text: "No hay registros para procesar. Cargue un archivo CSV.",
+            });
+            return;
+        }
+
+        const confirm = await sweetAlert.fire({
+            type: "question",
+            title: "¿Confirmar procesamiento?",
+            message: "Se agendarán las resoluciones cargadas.",
+            showCancelButton: true,
+            confirmButtonText: "Sí, procesar",
+            cancelButtonText: "Cancelar",
+        });
+
+        if (!confirm.isConfirmed) return;
+
         setStatus("Procesando... por favor espera.");
+
         try {
             await dispatch(
                 postBatchs({
@@ -120,10 +177,21 @@ const Resoluciones = () => {
                     records: jsonData,
                 })
             );
+
+            sweetAlert.fire({
+                type: "success",
+                title: "Proceso exitoso",
+                message: "Las resoluciones fueron agendadas correctamente.",
+            });
+
+            setStatus("Agendado correctamente");
         } catch (error) {
-            console.error("Error!");
+            sweetAlert.fire({
+                type: "error",
+                title: "Error",
+                message: "Ocurrió un error al procesar la información.",
+            });
         }
-        setStatus("Agendado correctamente");
     };
 
     return (
