@@ -122,15 +122,16 @@ const Resoluciones = () => {
 
     const isFormComplete = () => {
         return (
-            resolutionText?.trim() !== "" &&
-            selectedType !== "" &&
-            executionDate !== ""
+            leyenda?.trim() !== "" &&
+            fechaResolucion !== "" &&
+            fechaEjecucion !== "" &&
+            idArea
         );
     };
 
     // Itera y envía los datos a la API
     const handleProcessAPI = async () => {
-        if (!isFormComplete) {
+        if (!isFormComplete()) {
             sweetAlert.fire({
                 type: "warning",
                 title: "Formulario incompleto",
