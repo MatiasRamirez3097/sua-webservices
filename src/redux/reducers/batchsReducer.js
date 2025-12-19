@@ -6,6 +6,7 @@ import {
     getOneBatch,
     idAreaAction,
     leyendaAction,
+    newFechaEjecucionAction,
     postBatchs,
     typeAction,
 } from "../actions/batchsActions";
@@ -18,6 +19,7 @@ const initialState = {
     errores: [],
     fechaEjecucion: "",
     fechaResolucion: "",
+    newFechaEjecucion: "",
     type: "RESOLUCION",
     batchs: [],
     batch: {},
@@ -52,6 +54,10 @@ const batchsReducer = createReducer(initialState, (builder) =>
         .addCase(typeAction, (state, action) => {
             alert(action.payload);
             const newState = { ...state, type: action.payload };
+            return newState;
+        })
+        .addCase(newFechaEjecucionAction, (state, action) => {
+            const newState = { ...state, newFechaEjecucion: action.payload };
             return newState;
         })
         .addCase(getBatchs.fulfilled, (state, action) => {

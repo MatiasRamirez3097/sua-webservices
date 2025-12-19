@@ -14,6 +14,15 @@ const fechaEjecucionAction = createAction("fechaEjecucionAction", (val) => {
     };
 });
 
+const newFechaEjecucionAction = createAction(
+    "newFechaEjecucionAction",
+    (val) => {
+        return {
+            payload: val,
+        };
+    }
+);
+
 const fechaResolucionAction = createAction("fechaResolucionAction", (val) => {
     return {
         payload: val,
@@ -109,6 +118,23 @@ const postBatchs = createAsyncThunk(
     }
 );
 
+const rescheduleBatch = createAsyncThunk(
+    "rescheduleBatch",
+    async ({ id, newDate }, { rejectWithValue }) => {
+        alert(newDate);
+        try {
+            const res = await server.patch(`/batchs/reschedule/${id}`, {
+                newDate,
+            });
+            return res.data.response;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || error.message
+            );
+        }
+    }
+);
+
 export {
     idAreaAction,
     leyendaAction,
@@ -117,5 +143,7 @@ export {
     postBatchs,
     fechaEjecucionAction,
     fechaResolucionAction,
+    newFechaEjecucionAction,
+    rescheduleBatch,
     typeAction,
 };
