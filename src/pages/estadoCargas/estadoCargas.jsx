@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button, Div, Input, Label, Modal, Table } from "../../components";
 import { useDispatch, useSelector } from "react-redux";
 import {
+    deleteOneBatch,
     getBatchs,
     getOneBatch,
     newFechaEjecucionAction,
@@ -77,6 +78,23 @@ const EstadoCargas = () => {
         const ONE_HOUR = 60 * 60 * 1000;
 
         return diff > ONE_HOUR;
+    };
+
+    const handleDelete = (id) => {
+        setIdSelected(id);
+        setModal({
+            status: true,
+            type: "delete",
+        });
+    };
+
+    const sendDelete = async () => {
+        await dispatch(deleteOneBatch(idSelected));
+        await dispatch(getBatchs());
+        setModal({
+            status: false,
+            type: null,
+        });
     };
 
     const handleScheduledEdit = (id) => {
@@ -197,24 +215,17 @@ const EstadoCargas = () => {
                         header: "Acciones",
                         render: (row) => (
                             <div className="flex justify-center items-center gap-3">
-                                {row.status === "PENDING" ? (
-                                    <>
-                                        {isEditable && (
-                                            <Button
-                                                className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
-                                                text="Cambiar fecha ejecucion"
-                                                onClick={() =>
-                                                    handleScheduledEdit(row._id)
-                                                }
-                                            />
-                                        )}
-                                        <Button
-                                            className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
-                                            text="Eliminar"
-                                        />
-                                    </>
-                                ) : row.status === "COMPLETED" &&
-                                  row.errorsCount > 0 ? (
+                                {row.status === "PENDING" && isEditable && (
+                                    <Button
+                                        className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
+                                        text="Cambiar fecha ejecucion"
+                                        onClick={() =>
+                                            handleScheduledEdit(row._id)
+                                        }
+                                    />
+                                )}
+                                {row.status === "COMPLETED" &&
+                                row.errorsCount > 0 ? (
                                     <Button
                                         className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
                                         text="Ver errores"
@@ -226,6 +237,13 @@ const EstadoCargas = () => {
                                         text="Ver Resultados"
                                     ></Button>
                                 )}
+                                {row.errorsCount === row.totalRecords && (
+                                    <Button
+                                        className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
+                                        text="Eliminar"
+                                        onClick={() => handleDelete(row._id)}
+                                    />
+                                )}
                             </div>
                         ),
                     },
@@ -233,7 +251,7 @@ const EstadoCargas = () => {
             />
             {modal.status && (
                 <Modal>
-                    {modal.type === "errors" ? (
+                    {modal.type === "errors" &&
                         Object.keys(batch).length > 0 && (
                             <Div>
                                 <table className="w-full border-collapse border border-gray-700 text-white my-4">
@@ -296,8 +314,8 @@ const EstadoCargas = () => {
                                     />
                                 </div>
                             </Div>
-                        )
-                    ) : (
+                        )}
+                    {modal.type === "reschedule" && (
                         <div className="flex-1">
                             <Label label="Fecha y hora ejecucion" />
                             <Input
@@ -311,6 +329,29 @@ const EstadoCargas = () => {
                                 <Button
                                     text="OK"
                                     onClick={() => sendScheduledChange()}
+                                    className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg px-4 py-2 flex items-center justify-center"
+                                />
+
+                                <Button
+                                    text="Cancelar"
+                                    onClick={() =>
+                                        setModal({
+                                            status: false,
+                                            type: null,
+                                        })
+                                    }
+                                    className="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg px-4 py-2 flex items-center justify-center whitespace-nowrap"
+                                />
+                            </div>
+                        </div>
+                    )}
+                    {modal.type === "delete" && (
+                        <div className="flex-1">
+                            <Label label="Esta seguro que desea Eliminar?" />
+                            <div className="flex justify-center items-center gap-4 mt-4">
+                                <Button
+                                    text="OK"
+                                    onClick={() => sendDelete()}
                                     className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg px-4 py-2 flex items-center justify-center"
                                 />
 
