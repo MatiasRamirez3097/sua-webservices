@@ -1,5 +1,6 @@
 import { createReducer } from "@reduxjs/toolkit";
 import {
+    deleteOneBatch,
     fechaEjecucionAction,
     fechaResolucionAction,
     getBatchs,
@@ -58,6 +59,14 @@ const batchsReducer = createReducer(initialState, (builder) =>
         })
         .addCase(newFechaEjecucionAction, (state, action) => {
             const newState = { ...state, newFechaEjecucion: action.payload };
+            return newState;
+        })
+        .addCase(deleteOneBatch.fulfilled, (state, action) => {
+            const newState = { ...state, batch: {} };
+            return newState;
+        })
+        .addCase(deleteOneBatch.rejected, (state, action) => {
+            const newState = { ...state, batch: {} };
             return newState;
         })
         .addCase(getBatchs.fulfilled, (state, action) => {

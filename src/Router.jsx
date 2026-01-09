@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import Layout from "./layout/Layout";
-import { EstadoCargas, Home, Resoluciones, Usuarios } from "./pages";
+import { EstadoCargas, Home, Resoluciones, Rodados, Usuarios } from "./pages";
 import { ProtectedRoute } from "./components";
 
 const router = createBrowserRouter([
@@ -18,6 +18,10 @@ const router = createBrowserRouter([
             {
                 element: <ProtectedRoute allowedRoles={["admin", "manager"]} />,
                 children: [
+                    {
+                        path: "/rodados",
+                        element: <Rodados />,
+                    },
                     {
                         path: "/estadocargas",
                         element: <EstadoCargas />,
