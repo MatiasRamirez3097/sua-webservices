@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { Button, Div, Input, Label, Modal, Table } from "../../components";
+import {
+    Button,
+    Div,
+    Input,
+    Label,
+    Modal,
+    Table,
+    Tooltip,
+} from "../../components";
 import { useDispatch, useSelector } from "react-redux";
 import {
     getBatchs,
@@ -8,6 +16,11 @@ import {
     rescheduleBatch,
 } from "../../redux/actions/batchsActions";
 import createCSV from "../../utils/createCSV";
+import clockImg from "../../assets/icons/Lapiz.svg";
+import trashImg from "../../assets/icons/Basura.svg";
+import playImg from "../../assets/icons/Play.svg";
+
+import { sweetAlert } from "../../components/alerts/SweetAlert";
 
 const EstadoCargas = () => {
     const dispatch = useDispatch();
@@ -19,6 +32,8 @@ const EstadoCargas = () => {
     const { batch, batchs, newFechaEjecucion } = useSelector(
         (store) => store.batchsReducer
     );
+
+    const { user } = useSelector((store) => store.usersReducer);
 
     useEffect(() => {
         dispatch(getBatchs());
@@ -93,20 +108,63 @@ const EstadoCargas = () => {
     };
 
     const sendScheduledChange = async () => {
+        const confirm = await sweetAlert.fire({
+            type: "question",
+            title: "¿Confirmar cambio?",
+            message: "Se modificará la fecha de ejecución del lote.",
+            showCancelButton: true,
+            confirmButtonText: "Sí, cambiar",
+            cancelButtonText: "Cancelar",
+        });
+
+        if (!confirm.isConfirmed) return;
+
         await dispatch(
             rescheduleBatch({
                 id: idSelected,
                 newDate: newFechaEjecucion,
             })
         );
-        setModal({
-            status: false,
-            type: null,
+
+        sweetAlert.fire({
+            type: "success",
+            title: "Fecha actualizada",
+            message: "La ejecución fue reprogramada correctamente.",
+        });
+
+        setModal({ status: false, type: null });
+    };
+
+    const isAdmin = user?.role?.toLowerCase() === "admin";
+
+    const executeNow = async (batchId) => {
+        const confirm = await sweetAlert.fire({
+            type: "question",
+            title: "¿Ejecutar ahora?",
+            message: "El lote se ejecutará inmediatamente.",
+            showCancelButton: true,
+            confirmButtonText: "Sí, ejecutar",
+            cancelButtonText: "Cancelar",
+        });
+
+        if (!confirm.isConfirmed) return;
+
+        dispatch(
+            rescheduleBatch({
+                id: batchId,
+                newDate: new Date().toISOString(),
+            })
+        );
+
+        sweetAlert.fire({
+            type: "success",
+            title: "Ejecutado",
+            message: "El lote fue enviado a ejecución inmediata.",
         });
     };
 
     return (
-        <Div className="w-full max-w-8xl mx-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8">
+        <Div className="w-full max-w-8xl mx-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8 h-[calc(100vh-140px)] flex flex-col">
             <Table
                 data={batchs}
                 columns={[
@@ -196,22 +254,58 @@ const EstadoCargas = () => {
                     {
                         header: "Acciones",
                         render: (row) => (
-                            <div className="flex justify-center items-center gap-3">
+                            <div className="flex justify-center items-center gap-3 h-20">
                                 {row.status === "PENDING" ? (
                                     <>
                                         {isEditable && (
+                                            <Tooltip text="Cambiar fecha de ejecución">
+                                                <Button
+                                                    className="bg-yellow-400 hover:bg-yellow-500 rounded-xl h-14 w-14 flex items-center justify-center"
+                                                    onClick={() =>
+                                                        handleScheduledEdit(
+                                                            row._id
+                                                        )
+                                                    }
+                                                >
+                                                    <img
+                                                        src={clockImg}
+                                                        alt="Cambiar fecha"
+                                                        className="h-8 w-8"
+                                                    />
+                                                </Button>
+                                            </Tooltip>
+                                        )}
+                                        {isAdmin && isEditable && (
+                                            <Tooltip text="Ejecutar inmediatamente">
+                                                <Button
+                                                    type="button"
+                                                    className="bg-green-600 hover:bg-green-700 rounded-xl h-14 w-14 flex items-center justify-center"
+                                                    onClick={() =>
+                                                        executeNow(row._id)
+                                                    }
+                                                >
+                                                    <img
+                                                        src={playImg}
+                                                        alt="Eliminar ahora"
+                                                        className="h-8 w-8"
+                                                    />
+                                                </Button>
+                                            </Tooltip>
+                                        )}
+                                        <Tooltip text="Eliminar lote">
                                             <Button
-                                                className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
-                                                text="Cambiar fecha ejecucion"
+                                                className="bg-red-600 hover:bg-red-700 rounded-xl h-14 w-14 flex items-center justify-center"
                                                 onClick={() =>
                                                     handleScheduledEdit(row._id)
                                                 }
-                                            />
-                                        )}
-                                        <Button
-                                            className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
-                                            text="Eliminar"
-                                        />
+                                            >
+                                                <img
+                                                    src={trashImg}
+                                                    alt="Eliminar ejecucion"
+                                                    className="h-8 w-8"
+                                                />
+                                            </Button>
+                                        </Tooltip>
                                     </>
                                 ) : row.status === "COMPLETED" &&
                                   row.errorsCount > 0 ? (

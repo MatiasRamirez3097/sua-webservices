@@ -13,6 +13,7 @@ import RoleGuard from "./roleGuard/RoleGuard";
 import ProtectedRoute from "./protectedRoute/ProtectedRoute";
 import Table from "./table/Table";
 import Select from "./select/Select";
+import Tooltip from "./tooltip/Tooltip";
 
 export {
     Button,
@@ -30,4 +31,5 @@ export {
     RoleGuard,
     Select,
     Table,
+    Tooltip,
 };

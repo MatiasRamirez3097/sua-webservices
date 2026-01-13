@@ -10,7 +10,7 @@ const Table = ({ columns, data }) => {
     }
 
     return (
-        <div className="overflow-x-auto overflow-y-auto max-h-80 rounded-lg shadow border border-gray-700 mt-6">
+        <div className="overflow-x-auto overflow-y-auto flex-1 rounded-lg shadow border border-gray-700 mt-6">
             <table className="w-full border text-center border-gray-600 border-collapse rounded-lg overflow-hidden text-white">
                 {/* CABECERA */}
                 <thead className="bg-gray-400 text-black">
