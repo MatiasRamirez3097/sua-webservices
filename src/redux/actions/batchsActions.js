@@ -135,8 +135,22 @@ const rescheduleBatch = createAsyncThunk(
     }
 );
 
+const deleteOneBatch = createAsyncThunk(
+    "deleteOneBatch",
+    async (id, { rejectWithValue }) => {
+        try {
+            alert("llego");
+            const res = await server.delete(`/batchs/deleteone/${id}`);
+            return res.data.response;
+        } catch (error) {
+            error.response?.data?.message || error.message;
+        }
+    }
+);
+
 export {
     idAreaAction,
+    deleteOneBatch,
     leyendaAction,
     getBatchs,
     getOneBatch,
