@@ -132,6 +132,28 @@ const Rodados = () => {
                 </div>
             </Div>
 
+            <Div>
+                <H2 label="GESTION DE HORAS" />
+                <div className="flex gap-4 justify-center flex-wrap">
+                    <Button
+                        text="Horas de cupo"
+                        className="bg-indigo-700 hover:bg-indigo-600 px-4 py-2 rounded text-white"
+                    />
+                    <Button
+                        text="Horas Adicionales"
+                        className="bg-indigo-700 hover:bg-indigo-600 px-4 py-2 rounded text-white"
+                    />
+                    <Button
+                        text="Definir Cupo de Adicionales"
+                        className="bg-indigo-700 hover:bg-indigo-600 px-4 py-2 rounded text-white"
+                    />
+                    <Button
+                        text="Hojas de Ruta"
+                        className="bg-indigo-700 hover:bg-indigo-600 px-4 py-2 rounded text-white"
+                    />
+                </div>
+            </Div>
+
             {/* CALENDARIO */}
             <Div className="w-full x-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8">
                 <div className="relative mb-6">
