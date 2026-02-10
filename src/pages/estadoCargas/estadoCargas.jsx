@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button, Div, Input, Label, Modal, Table } from "../../components";
 import { useDispatch, useSelector } from "react-redux";
-import {
-    deleteOneBatch,
-    getBatchs,
-    getOneBatch,
-    newFechaEjecucionAction,
-    rescheduleBatch,
-} from "../../redux/actions/batchsActions";
+import { getBatches, getOneBatch } from "../../redux/slices/sua/batchSlice.js";
 import createCSV from "../../utils/createCSV";
 
 const EstadoCargas = () => {
@@ -17,26 +11,26 @@ const EstadoCargas = () => {
         type: null,
     });
     const [idSelected, setIdSelected] = useState(null);
-    const { batch, batchs, newFechaEjecucion } = useSelector(
-        (store) => store.batchsReducer
+    const { batch, list, newFechaEjecucion } = useSelector(
+        (store) => store.batches
     );
 
     useEffect(() => {
-        dispatch(getBatchs());
+        dispatch(getBatches());
     }, [dispatch]);
 
     useEffect(() => {
-        const checkActiveProccess = batchs.some(
+        const checkActiveProccess = list.some(
             (b) => b.status === "PROCESSING" || b.status === "PENDING"
         );
         if (checkActiveProccess) {
             const intervalId = setInterval(() => {
-                dispatch(getBatchs());
+                dispatch(getBatches());
             }, 3000);
 
             return () => clearInterval(intervalId);
         }
-    }, [batchs, dispatch]);
+    }, [list, dispatch]);
 
     const getErrors = async (id) => {
         await dispatch(
@@ -90,7 +84,7 @@ const EstadoCargas = () => {
 
     const sendDelete = async () => {
         await dispatch(deleteOneBatch(idSelected));
-        await dispatch(getBatchs());
+        await dispatch(getBatches());
         setModal({
             status: false,
             type: null,
@@ -126,7 +120,7 @@ const EstadoCargas = () => {
     return (
         <Div className="w-full max-w-8xl mx-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8">
             <Table
-                data={batchs}
+                data={list}
                 columns={[
                     {
                         header: "Fecha",
