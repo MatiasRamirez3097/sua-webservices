@@ -2,7 +2,7 @@ import { useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
 
 const ProtectedRoute = ({ allowedRoles }) => {
-    const { user } = useSelector((store) => store.usersReducer);
+    const { user } = useSelector((store) => store.auth);
 
     // Si no está logueado, al login
     if (!user || !Object.keys(user).length) {

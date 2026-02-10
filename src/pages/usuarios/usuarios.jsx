@@ -1,14 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-    createUser,
-    getUsers,
-    updateUser,
-    deleteUser,
-} from "../../redux/actions/usersActions";
+import { getUsers } from "../../redux/slices/auth/userSlice";
 import { Div, H2, Button, Label, Input, Table } from "../../components";
 import { sweetAlert } from "../../components/alerts/SweetAlert";
-
+import { updateUser } from "../../redux/slices/auth/userSlice";
 const Usuarios = () => {
     const [modalOpen, setModalOpen] = useState(false);
     const [rol, setRol] = useState("lector");
@@ -24,9 +19,7 @@ const Usuarios = () => {
 
     const dispatch = useDispatch();
 
-    const { users, loadingUsers, error } = useSelector(
-        (state) => state.usersReducer
-    );
+    const { list, loadingUsers, error } = useSelector((state) => state.users);
 
     useEffect(() => {
         if (modalOpen) {
@@ -118,7 +111,7 @@ const Usuarios = () => {
             {/* Tabla */}
             <div className="overflow-x-auto bg-gray-700 p-4 rounded-xl shadow-md">
                 <Table
-                    data={users}
+                    data={list}
                     columns={[
                         { header: "Nombre", key: "name" },
                         { header: "Apellido", key: "surname" },
@@ -215,22 +208,22 @@ const Usuarios = () => {
                                         }
                                     />
                                 </div>
-
-                                <div>
-                                    <Label label="Contraseña" />
-                                    <Input
-                                        type="password"
-                                        placeholder="Mínimo 6 caracteres"
-                                        value={formData.password}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                password: e.target.value,
-                                            })
-                                        }
-                                    />
-                                </div>
-
+                                {!editMode && (
+                                    <div>
+                                        <Label label="Contraseña" />
+                                        <Input
+                                            type="password"
+                                            placeholder="Mínimo 6 caracteres"
+                                            value={formData.password}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    password: e.target.value,
+                                                })
+                                            }
+                                        />
+                                    </div>
+                                )}
                                 <div className="flex flex-col gap-2">
                                     <Label label="Rol del usuario" />
                                     <select
@@ -304,10 +297,21 @@ const Usuarios = () => {
 
                                             if (editMode) {
                                                 // UPDATE
+                                                const {
+                                                    name,
+                                                    surname,
+                                                    email,
+                                                    role,
+                                                } = userData;
                                                 res = await dispatch(
                                                     updateUser({
                                                         id: editingId,
-                                                        data: userData,
+                                                        data: {
+                                                            name,
+                                                            surname,
+                                                            email,
+                                                            role,
+                                                        },
                                                     })
                                                 );
                                             } else {
