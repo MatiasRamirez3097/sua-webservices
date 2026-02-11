@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
  * @param {ReactNode} children - El componente a mostrar si tiene permiso
  */
 const RoleGuard = ({ allowedRoles, children }) => {
-    const { user } = useSelector((store) => store.usersReducer);
+    const { user } = useSelector((store) => store.auth);
 
     // 1. Si no hay usuario, no mostramos nada
     if (!user || !user.role) return null;

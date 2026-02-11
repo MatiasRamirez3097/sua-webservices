@@ -2,25 +2,17 @@ import { useEffect, useState } from "react"; // 1. Importar hooks
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet } from "react-router";
 import { Footer, LoginForm, Modal, Navbar } from "../components";
-import {
-    authenticate,
-    logOut,
-    setUser,
-    signIn,
-} from "../redux/actions/usersActions";
+import { logout, loadUser, loginUser } from "../redux/slices/auth/authSlice";
 import { ls } from "../utils/ls";
 
 const Layout = () => {
     const dispatch = useDispatch();
-    const { user } = useSelector((store) => store.usersReducer);
-
-    const [loading, setLoading] = useState(true);
+    const { loading, user } = useSelector((store) => store.auth);
 
     // 3. Este useEffect corre solo UNA vez al recargar la página
     useEffect(() => {
         const initAuth = async () => {
-            await dispatch(authenticate());
-            setLoading(false);
+            await dispatch(loadUser());
         };
 
         initAuth();
@@ -40,11 +32,11 @@ const Layout = () => {
             {Object.keys(user).length == 0 && (
                 <Modal>
                     <LoginForm
-                        sendSubmit={(values) => dispatch(signIn(values))}
+                        sendSubmit={(values) => dispatch(loginUser(values))}
                     />
                 </Modal>
             )}
-            <Navbar logout={() => dispatch(logOut())} user={user} />
+            <Navbar logout={() => dispatch(logout())} user={user} />
             <main className="flex-grow pt-12 pb-12 px-4">
                 <Outlet />
             </main>

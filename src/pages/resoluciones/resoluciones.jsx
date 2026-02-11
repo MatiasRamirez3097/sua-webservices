@@ -2,13 +2,12 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Papa from "papaparse"; // Importamos papaparse
 import {
-    fechaEjecucionAction,
-    fechaResolucionAction,
-    idAreaAction,
-    leyendaAction,
-    postBatchs,
-} from "../../redux/actions/batchsActions";
-
+    postBatches,
+    setIdArea,
+    setLegend,
+    setExecutionDate,
+    setResolutionDate,
+} from "../../redux/slices/sua/batchSlice";
 import {
     CsvProcessor,
     Div,
@@ -23,9 +22,9 @@ import { sweetAlert } from "../../components/alerts/SweetAlert";
 
 const Resoluciones = () => {
     const dispatch = useDispatch();
-    const { errores, idArea, leyenda, fechaEjecucion, fechaResolucion } =
-        useSelector((store) => store.batchsReducer);
-    const { user } = useSelector((store) => store.usersReducer);
+    const { errors, idArea, legend, executionDate, resolutionDate } =
+        useSelector((store) => store.batches);
+    const { user } = useSelector((store) => store.users);
 
     const [file, setFile] = useState(null);
     const [jsonData, setJsonData] = useState([]);
@@ -35,13 +34,13 @@ const Resoluciones = () => {
     const [rowStatus, setRowStatus] = useState({});
 
     const onChange = (e) => {
-        if (e.target.name == "leyenda") dispatch(leyendaAction(e.target.value));
-        else if (e.target.name == "fecha")
-            dispatch(fechaResolucionAction(e.target.value));
-        else if (e.target.name == "fechaEjecucion")
-            dispatch(fechaEjecucionAction(e.target.value));
+        if (e.target.name == "legend") dispatch(setLegend(e.target.value));
+        else if (e.target.name == "resolutionDate")
+            dispatch(setResolutionDate(e.target.value));
+        else if (e.target.name == "executionDate")
+            dispatch(setExecutionDate(e.target.value));
         else if (e.target.name == "idArea") {
-            dispatch(idAreaAction(e.target.value));
+            dispatch(setIdArea(e.target.value));
         }
     };
     // Maneja la selección del archivo
@@ -54,10 +53,10 @@ const Resoluciones = () => {
     };
 
     const handleDescargarErrores = () => {
-        if (!errores || errores.length === 0) return;
+        if (!errors || errors.length === 0) return;
 
         // 1. Convertir JSON a CSV
-        const csv = Papa.unparse(errores);
+        const csv = Papa.unparse(errors);
 
         // 2. Crear un Blob (archivo en memoria)
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -122,9 +121,9 @@ const Resoluciones = () => {
 
     const isFormComplete = () => {
         return (
-            leyenda?.trim() !== "" &&
-            fechaResolucion !== "" &&
-            fechaEjecucion !== "" &&
+            legend?.trim() !== "" &&
+            resolutionDate !== "" &&
+            executionDate !== "" &&
             idArea
         );
     };
@@ -165,13 +164,13 @@ const Resoluciones = () => {
 
         try {
             await dispatch(
-                postBatchs({
+                postBatches({
                     idArea: idArea,
                     type: "RESOLUCION",
-                    date: fechaResolucion,
-                    scheduledFor: fechaEjecucion,
+                    resolutionDate: resolutionDate,
+                    scheduledFor: executionDate,
                     data: {
-                        leyenda: leyenda,
+                        legend: legend,
                         tipoResolucion: 1,
                         id_motivo_cierre: 0,
                     },
@@ -201,18 +200,18 @@ const Resoluciones = () => {
             <Div>
                 <Label label="Ingresar la leyenda de resolución" />
                 <TextArea
-                    name="leyenda"
+                    name="legend"
                     onChange={(e) => onChange(e)}
                     placeholder="Escribe aquí la resolución..."
-                    value={leyenda}
+                    value={legend}
                 />
             </Div>
             <div className="flex gap-4 w-full max-w-4xl mx-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8">
                 <div className="flex-1">
                     <Label label="Ingresar la fecha de resolución" />
                     <Input
-                        value={fechaResolucion}
-                        name="fecha"
+                        value={resolutionDate}
+                        name="resolutionDate"
                         onChange={(e) => onChange(e)}
                         type="datetime-local"
                         step="1"
@@ -221,8 +220,8 @@ const Resoluciones = () => {
                 <div className="flex-1">
                     <Label label="Fecha y hora ejecucion" />
                     <Input
-                        value={fechaEjecucion}
-                        name="fechaEjecucion"
+                        value={executionDate}
+                        name="executionDate"
                         onChange={(e) => onChange(e)}
                         type="datetime-local"
                         step="1"
@@ -250,7 +249,7 @@ const Resoluciones = () => {
                 </div>
             </Div>
             <CsvProcessor
-                errores={errores}
+                errores={errors}
                 file={file}
                 handleDescargarErrores={handleDescargarErrores}
                 handleFileChange={handleFileChange}
