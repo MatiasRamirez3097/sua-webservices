@@ -68,7 +68,7 @@ const Rodados = () => {
 
     return (
         <>
-            <Div>
+            <Div className="w-full max-w-4xl mx-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8">
                 <div className="flex items-center justify-center gap-3 mb-6 border-b border-gray-600 pb-3">
                     <img
                         src={CamionIcon}
