@@ -8,6 +8,8 @@ import H2 from "./h2/H2";
 import Label from "./label/Label";
 import Div from "./div/Div";
 import Modal from "./modal/Modal";
+import ModalRegister from "./modal/ModalRegister";
+import ModalLogin from "./modal/ModalLogin";
 import LoginForm from "./forms/LoginForm";
 import RoleGuard from "./roleGuard/RoleGuard";
 import ProtectedRoute from "./protectedRoute/ProtectedRoute";
@@ -26,6 +28,8 @@ export {
     Label,
     Div,
     Modal,
+    ModalRegister,
+    ModalLogin,
     ProtectedRoute,
     RoleGuard,
     Select,
