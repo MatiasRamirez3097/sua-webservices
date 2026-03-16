@@ -13,9 +13,7 @@ const CsvProcessor = ({
     headers,
     rowStatus,
 }) => {
-    // Función auxiliar para colores
     const getRowStyle = (index) => {
-        // Verificamos si rowStatus existe para evitar errores si es undefined
         if (!rowStatus) return {};
 
         const state = rowStatus[index];
@@ -26,19 +24,27 @@ const CsvProcessor = ({
     };
 
     return (
-        // Contenedor principal
-        <Div>
-            {/* Título principal */}
+        <div>
             <Label label="Procesador de CSV" />
 
-            {/* Sección para subir archivo */}
+            {/* SECCIÓN SUBIR ARCHIVO MODIFICADA */}
             <div className="flex flex-col items-center gap-4">
-                {/* LABEL COMO BOTÓN PARA SUBIR ARCHIVO */}
+                {/* ZONA COMPLETA CLICKEABLE */}
                 <label
                     htmlFor="file-upload"
-                    className="bg-indigo-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-indigo-600 transition"
+                    className="w-80 h-40 flex flex-col items-center justify-center bg-indigo-900
+                               border-2 border-dashed border-gray-500 
+                               rounded-lg cursor-pointer 
+                               hover:bg-indigo-700 transition"
                 >
-                    Seleccionar archivo
+                    <p className="text-white font-medium">
+                        {file
+                            ? file.name
+                            : "Tocar aquí para seleccionar archivo CSV"}
+                    </p>
+                    <p className="text-sm text-gray-400 mt-2">
+                        Solo archivos .csv
+                    </p>
                 </label>
 
                 {/* INPUT REAL OCULTO */}
@@ -50,19 +56,13 @@ const CsvProcessor = ({
                     className="hidden"
                 />
 
-                {/* NOMBRE DEL ARCHIVO */}
-                <p className="text-sm text-gray-300 italic">
-                    {file ? file.name : "Ningún archivo seleccionado"}
-                </p>
-
-                {/* GRUPO DE BOTONES EN FILA */}
+                {/* BOTONES */}
                 <div className="flex gap-4">
-                    {/* BOTÓN: CARGAR Y MOSTRAR CSV */}
                     <button
                         onClick={handleParse}
                         disabled={!file}
                         className={`px-6 py-2 rounded-md text-white font-medium transition-colors duration-200 
-							${
+                            ${
                                 file
                                     ? "bg-indigo-900 hover:bg-indigo-700 cursor-pointer"
                                     : "bg-gray-700 cursor-not-allowed"
@@ -71,12 +71,11 @@ const CsvProcessor = ({
                         Cargar y Mostrar CSV
                     </button>
 
-                    {/*BOTON PROCESAR FILAS EN API*/}
                     <button
                         onClick={handleProcessAPI}
                         disabled={jsonData.length === 0}
-                        className={`px-6 py-2 rounded-md font-medium transition-colors duration-200
-							${
+                        className={`px-6 py-2 rounded-md font-medium text-white transition-colors duration-200
+                            ${
                                 jsonData.length > 0
                                     ? "bg-indigo-900 hover:bg-indigo-700 cursor-pointer"
                                     : "bg-gray-700 cursor-not-allowed"
@@ -86,7 +85,8 @@ const CsvProcessor = ({
                     </button>
                 </div>
             </div>
-            {/* Mostrar botón solo si hay errores en el array */}
+
+            {/* ERRORES */}
             {errores && errores.length > 0 && (
                 <div className="mt-4 p-4 bg-indigo-200 border border-black rounded-lg flex items-center justify-between">
                     <div className="text-red-700">
@@ -102,7 +102,6 @@ const CsvProcessor = ({
                         onClick={handleDescargarErrores}
                         className="px-4 py-2 bg-red-600 text-white border border-black font-semibold rounded hover:bg-red-700 transition shadow-sm flex items-center gap-2"
                     >
-                        {/* Icono de descarga opcional */}
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             className="h-5 w-5"
@@ -122,6 +121,7 @@ const CsvProcessor = ({
                 </div>
             )}
 
+            {/* TABLA */}
             {jsonData.length > 0 && (
                 <div className="mt-6">
                     <h3 className="text-lg font-semibold mb-3 text-white">
@@ -129,13 +129,13 @@ const CsvProcessor = ({
                     </h3>
 
                     <div className="overflow-x-auto overflow-y-auto max-h-80 rounded-lg shadow border border-black">
-                        <table className="w-full border text-center border-gray-300 border-collapse rounded-lg overflow-hidden">
+                        <table className="w-full text-center border border-gray-300 border-collapse rounded-lg overflow-hidden">
                             <thead className="bg-gray-400 text-black">
                                 <tr>
                                     {headers.map((header) => (
                                         <th
                                             key={header}
-                                            className="px-4 py-2 text-center font-bold border border-black-400"
+                                            className="px-4 py-2 font-bold border border-black-400"
                                         >
                                             {header}
                                         </th>
@@ -143,7 +143,6 @@ const CsvProcessor = ({
                                 </tr>
                             </thead>
 
-                            {/* Filas del cuerpo: colores alternados (blanco / gris claro) */}
                             <tbody className="text-white">
                                 {jsonData.map((row, index) => (
                                     <tr
@@ -165,7 +164,7 @@ const CsvProcessor = ({
                     </div>
                 </div>
             )}
-        </Div>
+        </div>
     );
 };
 
