@@ -175,7 +175,7 @@ const Resoluciones = () => {
                         id_motivo_cierre: 0,
                     },
                     records: jsonData,
-                })
+                }),
             );
 
             sweetAlert.fire({
@@ -195,40 +195,51 @@ const Resoluciones = () => {
     };
 
     return (
-        <Div>
-            <H2 label="RESOLUCIONES MASIVAS" />
-            <Div>
-                <Label label="Ingresar la leyenda de resolución" />
-                <TextArea
-                    name="legend"
-                    onChange={(e) => onChange(e)}
-                    placeholder="Escribe aquí la resolución..."
-                    value={legend}
-                />
+        <div>
+            <Div className="w-full max-w-4xl mx-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8">
+                <div className="flex border-gray-600">
+                    <div className="w-1/3 flex items-center justify-center border-r border-gray-600">
+                        <H2
+                            className="text-3xl font-bold text-white text-center p-8"
+                            label="RESOLUCIONES MASIVAS"
+                        />
+                    </div>
+                    <div className="w-2/3 pl-6 pr-6 flex flex-col ">
+                        <Label label="Ingresar la leyenda de resolución" />
+                        <TextArea
+                            name="legend"
+                            onChange={(e) => onChange(e)}
+                            placeholder="Escribe aquí la resolución..."
+                            value={legend}
+                        />
+                    </div>
+                </div>
             </Div>
-            <div className="flex gap-4 w-full max-w-4xl mx-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8">
-                <div className="flex-1">
-                    <Label label="Ingresar la fecha de resolución" />
-                    <Input
-                        value={resolutionDate}
-                        name="resolutionDate"
-                        onChange={(e) => onChange(e)}
-                        type="datetime-local"
-                        step="1"
-                    />
+            <Div className="w-full max-w-4xl mx-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8">
+                <div className="flex gap-4 w-full max-w-4xl mx-auto pt-6 pb-10 bg-gray-800 border-gray-600">
+                    <div className="flex-1">
+                        <Label label="Ingresar fecha de resolución" />
+                        <Input
+                            value={resolutionDate}
+                            name="resolutionDate"
+                            onChange={(e) => onChange(e)}
+                            type="datetime-local"
+                            step="1"
+                        />
+                    </div>
+                    <div className="flex-1">
+                        <Label label="Seleccionar fecha y hora de ejecucion" />
+                        <Input
+                            value={executionDate}
+                            name="executionDate"
+                            onChange={(e) => onChange(e)}
+                            type="datetime-local"
+                            step="1"
+                        />
+                    </div>
                 </div>
-                <div className="flex-1">
-                    <Label label="Fecha y hora ejecucion" />
-                    <Input
-                        value={executionDate}
-                        name="executionDate"
-                        onChange={(e) => onChange(e)}
-                        type="datetime-local"
-                        step="1"
-                    />
-                </div>
-            </div>
-            <Div>
+            </Div>
+            <Div className="w-full max-w-4xl mx-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8">
                 <div className="flex-1">
                     <Label label="Area de SUA" />
                     <Select
@@ -248,19 +259,21 @@ const Resoluciones = () => {
                     />
                 </div>
             </Div>
-            <CsvProcessor
-                errores={errors}
-                file={file}
-                handleDescargarErrores={handleDescargarErrores}
-                handleFileChange={handleFileChange}
-                handleParse={handleParse}
-                jsonData={jsonData}
-                headers={headers}
-                status={status}
-                handleProcessAPI={handleProcessAPI}
-                rowStatus={rowStatus}
-            />
-        </Div>
+            <Div>
+                <CsvProcessor
+                    errores={errors}
+                    file={file}
+                    handleDescargarErrores={handleDescargarErrores}
+                    handleFileChange={handleFileChange}
+                    handleParse={handleParse}
+                    jsonData={jsonData}
+                    headers={headers}
+                    status={status}
+                    handleProcessAPI={handleProcessAPI}
+                    rowStatus={rowStatus}
+                />
+            </Div>
+        </div>
     );
 };
 
