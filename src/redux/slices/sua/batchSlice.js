@@ -17,17 +17,17 @@ export const getBatches = createAsyncThunk(
             return res.data.response;
         } catch (error) {
             return rejectWithValue(
-                error.response?.data?.message || error.message
+                error.response?.data?.message || error.message,
             );
         }
-    }
+    },
 );
 
 export const getOneBatch = createAsyncThunk(
     "sua/getOneBatch",
     async (
         { id, onlyErrors = false, fields = undefined, itemsFields = undefined },
-        { rejectWithValue }
+        { rejectWithValue },
     ) => {
         try {
             const token = ls.getText("token");
@@ -45,17 +45,17 @@ export const getOneBatch = createAsyncThunk(
             return res.data.response;
         } catch (error) {
             return rejectWithValue(
-                error.response?.data?.message || error.message
+                error.response?.data?.message || error.message,
             );
         }
-    }
+    },
 );
 
 export const postBatches = createAsyncThunk(
     "sua/postBatches",
     async (
         { type, resolutionDate, idArea, scheduledFor, data, records },
-        { rejectWithValue }
+        { rejectWithValue },
     ) => {
         try {
             const payload = {
@@ -66,7 +66,7 @@ export const postBatches = createAsyncThunk(
                 data: data,
                 records: records,
             };
-            const res = await server.post(`/batchs`, payload);
+            const res = await server.post(`/batches`, payload);
             return res.data.response;
         } catch (err) {
             const msg = err.response?.data?.detail || "Error desconocido";
@@ -77,7 +77,7 @@ export const postBatches = createAsyncThunk(
                 err: msg,
             });
         }
-    }
+    },
 );
 
 const rescheduleBatch = createAsyncThunk(
@@ -91,10 +91,10 @@ const rescheduleBatch = createAsyncThunk(
             return res.data.response;
         } catch (error) {
             return rejectWithValue(
-                error.response?.data?.message || error.message
+                error.response?.data?.message || error.message,
             );
         }
-    }
+    },
 );
 
 const deleteOneBatch = createAsyncThunk(
@@ -105,10 +105,10 @@ const deleteOneBatch = createAsyncThunk(
             return res.data.response;
         } catch (error) {
             return rejectWithValue(
-                error.response?.data?.message || error.message
+                error.response?.data?.message || error.message,
             );
         }
-    }
+    },
 );
 
 const batchSlice = createSlice({
