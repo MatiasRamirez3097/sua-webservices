@@ -80,12 +80,12 @@ export const postBatches = createAsyncThunk(
     },
 );
 
-const rescheduleBatch = createAsyncThunk(
+export const rescheduleBatch = createAsyncThunk(
     "rescheduleBatch",
     async ({ id, newDate }, { rejectWithValue }) => {
         alert(newDate);
         try {
-            const res = await server.patch(`/batchs/reschedule/${id}`, {
+            const res = await server.patch(`/batches/reschedule/${id}`, {
                 newDate,
             });
             return res.data.response;
@@ -97,11 +97,11 @@ const rescheduleBatch = createAsyncThunk(
     },
 );
 
-const deleteOneBatch = createAsyncThunk(
+export const deleteOneBatch = createAsyncThunk(
     "sua/deleteOneBatch",
     async (id, { rejectWithValue }) => {
         try {
-            const res = await server.delete(`/batchs/deleteone/${id}`);
+            const res = await server.delete(`/batches/deleteone/${id}`);
             return res.data.response;
         } catch (error) {
             return rejectWithValue(
