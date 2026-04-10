@@ -10,15 +10,15 @@ const Table = ({ columns, data }) => {
     }
 
     return (
-        <div className="rounded-lg shadow border border-gray-700 mt-6">
-            <table className="w-full border text-center border-gray-600 border-collapse rounded-lg overflow-hidden text-white">
+        <div className="rounded-lg shadow border border-gray-700 mt-6 overflow-auto max-h-[70vh]">
+            <table className="min-w-full border text-center border-gray-600 border-collapse rounded-lg overflow-hidden text-white">
                 {/* CABECERA */}
-                <thead className="bg-gray-400 text-black">
+                <thead className="bg-gray-700 text-gray-300 border-b border-gray-600">
                     <tr>
                         {columns.map((col) => (
                             <th
                                 key={col.key || col.header}
-                                className="px-4 py-2 text-center font-bold border border-gray-700 uppercase"
+                                className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider border-x border-gray-600 whitespace-nowrap"
                             >
                                 {col.header}
                             </th>
@@ -38,7 +38,7 @@ const Table = ({ columns, data }) => {
                             {columns.map((col, colIndex) => (
                                 <td
                                     key={col.key || colIndex}
-                                    className="px-4 py-2 border border-gray-700 text-center"
+                                    className="px-3 py-2 border-x border-gray-700 text-center text-sm whitespace-nowrap"
                                 >
                                     {col.render
                                         ? col.render(row)
