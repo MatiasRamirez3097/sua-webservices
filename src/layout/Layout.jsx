@@ -34,8 +34,10 @@ const Layout = () => {
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-900 text-white">
-            <Navbar logout={() => dispatch(logout())} user={user} />
-            <main className="flex-grow pt-12 pb-12 px-4">
+            <div className="sticky top-0 z-50">
+                <Navbar logout={() => dispatch(logout())} user={user} />
+            </div>
+            <main className="flex-grow px-4 py-6">
                 <Outlet />
             </main>
             <Footer />
