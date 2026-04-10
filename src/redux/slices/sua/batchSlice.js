@@ -2,6 +2,26 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { server } from "../../../Api";
 import { ls } from "../../../utils/ls.js";
 
+export const cancelBatch = createAsyncThunk(
+    "sua/cancelBatch",
+    async (id, { rejectWithValue }) => {
+        try {
+            const token = ls.getText("token");
+
+            const res = await server.patch(`/batches/cancel/${id}`, null, {
+                headers: {
+                    Authorization: "Bearer " + token,
+                },
+            });
+            return res.data.response;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || error.message,
+            );
+        }
+    },
+);
+
 export const getBatches = createAsyncThunk(
     "sua/getBatches",
     async (_, { rejectWithValue }) => {
@@ -83,7 +103,6 @@ export const postBatches = createAsyncThunk(
 export const rescheduleBatch = createAsyncThunk(
     "rescheduleBatch",
     async ({ id, newDate }, { rejectWithValue }) => {
-        alert(newDate);
         try {
             const res = await server.patch(`/batches/reschedule/${id}`, {
                 newDate,
@@ -167,6 +186,26 @@ const batchSlice = createSlice({
             .addCase(getOneBatch.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
+            })
+            .addCase(cancelBatch.fulfilled, (state, action) => {
+                const updated = action.payload;
+                state.list = state.list.map((batch) =>
+                    batch._id === updated._id ? updated : batch,
+                );
+            })
+            .addCase(rescheduleBatch.fulfilled, (state, action) => {
+                const updated = action.payload;
+
+                state.list = state.list.map((batch) =>
+                    batch._id === updated._id ? updated : batch,
+                );
+            })
+            .addCase(deleteOneBatch.fulfilled, (state, action) => {
+                const deletedId = action.meta.arg;
+
+                state.list = state.list.filter(
+                    (batch) => batch._id !== deletedId,
+                );
             });
     },
 });
