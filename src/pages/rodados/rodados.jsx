@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Div, H2, Button, Table } from "../../components";
-import PlanillaIcon from "../../assets/Planilla_icon.svg";
-import OperarioIcon from "../../assets/Operario_icon.svg";
-import RelojIcon from "../../assets/Reloj_icon.svg";
-import CamionIcon from "../../assets/Camion_icon.svg";
+import PlanillaIcon from "../../assets/icons/Planilla_icon.svg";
+import OperarioIcon from "../../assets/icons/Operario_icon.svg";
+import RelojIcon from "../../assets/icons/Reloj_icon.svg";
+import CamionIcon from "../../assets/icons/Camion_icon.svg";
 
 const getMonday = (date) => {
     const d = new Date(date);

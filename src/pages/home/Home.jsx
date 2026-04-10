@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import foto1 from "../../assets/Foto1.png";
-import foto2 from "../../assets/Foto2.jpg";
-import foto3 from "../../assets/Foto3.jpg";
+import foto1 from "../../assets/carruselImages/Foto1.png";
+import foto2 from "../../assets/carruselImages/Foto2.jpg";
+import foto3 from "../../assets/carruselImages/Foto3.jpg";
 
 const slides = [foto1, foto2, foto3];
 
@@ -28,7 +28,6 @@ const Home = () => {
     return (
         <div className="flex justify-center items-center min-h-screen">
             <div className="relative w-full max-w-5xl h-72 md:h-96 overflow-hidden rounded-2xl shadow-xl">
-                {/* Contenedor deslizante */}
                 <div
                     className="flex transition-transform duration-700 ease-in-out h-full"
                     style={{ transform: `translateX(-${current * 100}%)` }}
@@ -43,7 +42,6 @@ const Home = () => {
                     ))}
                 </div>
 
-                {/* Botón izquierda */}
                 <button
                     onClick={prevSlide}
                     className="absolute top-1/2 left-4 -translate-y-1/2 p-3 "
@@ -51,7 +49,6 @@ const Home = () => {
                     ❮
                 </button>
 
-                {/* Botón derecha */}
                 <button
                     onClick={nextSlide}
                     className="absolute top-1/2 right-4 -translate-y-1/2 p-3 "
@@ -59,7 +56,6 @@ const Home = () => {
                     ❯
                 </button>
 
-                {/* Indicadores */}
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
                     {slides.map((_, index) => (
                         <div

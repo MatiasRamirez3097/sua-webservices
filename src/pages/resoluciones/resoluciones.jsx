@@ -167,8 +167,6 @@ const Resoluciones = () => {
                 }),
             ).unwrap();
 
-            console.log("Respuesta OK:", response);
-
             sweetAlert.fire({
                 type: "success",
                 title: "Proceso exitoso",
@@ -176,6 +174,19 @@ const Resoluciones = () => {
             });
 
             setStatus("Agendado correctamente");
+
+            // ✅ Limpieza después del éxito
+            setFile(null);
+            setJsonData([]);
+            setHeaders([]);
+            setRowStatus({});
+
+            const fileInput = document.getElementById("file-upload");
+            if (fileInput) fileInput.value = "";
+
+            dispatch(setLegend(""));
+            dispatch(setResolutionDate(""));
+            dispatch(setExecutionDate(""));
         } catch (error) {
             console.error("Error real:", error);
 
@@ -192,17 +203,21 @@ const Resoluciones = () => {
     };
 
     return (
-        <div>
-            <Div className="w-full max-w-4xl mx-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8">
-                <div className="flex border-gray-600">
-                    <div className="w-1/3 flex items-center justify-center border-r border-gray-600">
-                        <H2
-                            className="text-3xl font-bold text-white text-center p-8"
-                            label="RESOLUCIONES MASIVAS"
-                        />
-                    </div>
-                    <div className="w-2/3 pl-6 pr-6 flex flex-col ">
-                        <Label label="Ingresar la leyenda de resolución" />
+        <div className="w-full max-w-4xl mx-auto space-y-6">
+            {/* BLOQUE 1 - Título + Leyenda */}
+            <Div className="border border-gray-700 p-6 bg-gray-800 rounded-xl">
+                <div className="border-b border-gray-700 pb-4 mb-6">
+                    <H2
+                        className="text-2xl font-bold text-white tracking-widest uppercase"
+                        label="Resoluciones Masivas"
+                    />
+                    <p className="text-gray-400 text-sm mt-1">
+                        Carga y procesamiento de resoluciones en lote
+                    </p>
+                </div>
+                <div className="flex gap-6">
+                    <div className="w-full flex flex-col">
+                        <Label label="Leyenda de resolución" />
                         <TextArea
                             name="legend"
                             onChange={onChange}
@@ -213,10 +228,11 @@ const Resoluciones = () => {
                 </div>
             </Div>
 
-            <Div className="w-full max-w-4xl mx-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8">
-                <div className="flex gap-4 w-full pt-6 pb-10">
+            {/* BLOQUE 2 - Fechas */}
+            <Div className="border border-gray-700 p-6 bg-gray-800 rounded-xl">
+                <div className="flex gap-6">
                     <div className="flex-1">
-                        <Label label="Ingresar fecha de resolución" />
+                        <Label label="Fecha de resolución" />
                         <Input
                             value={resolutionDate}
                             name="resolutionDate"
@@ -226,7 +242,7 @@ const Resoluciones = () => {
                         />
                     </div>
                     <div className="flex-1">
-                        <Label label="Seleccionar fecha y hora de ejecución" />
+                        <Label label="Fecha y hora de ejecución" />
                         <Input
                             value={executionDate}
                             name="executionDate"
@@ -238,7 +254,8 @@ const Resoluciones = () => {
                 </div>
             </Div>
 
-            <Div className="w-full max-w-4xl mx-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8">
+            {/* BLOQUE 3 - Área */}
+            <Div className="border border-gray-700 p-6 bg-gray-800 rounded-xl">
                 <Label label="Área de SUA" />
                 <Select
                     name="idArea"
@@ -254,7 +271,8 @@ const Resoluciones = () => {
                 />
             </Div>
 
-            <Div>
+            {/* BLOQUE 4 - CSV */}
+            <Div className="border border-gray-700 p-6 bg-gray-800 rounded-xl">
                 <CsvProcessor
                     errores={errors}
                     file={file}
