@@ -16,29 +16,27 @@ const router = createBrowserRouter([
                 element: <Home />,
             },
             {
-                element: <ProtectedRoute allowedRoles={["admin", "manager"]} />,
+                element: <ProtectedRoute requiredPermission="rodados" />,
                 children: [
-                    {
-                        path: "/rodados",
-                        element: <Rodados />,
-                    },
-                    {
-                        path: "/estadocargas",
-                        element: <EstadoCargas />,
-                    },
-                    {
-                        path: "/resoluciones",
-                        element: <Resoluciones />,
-                    },
+                    { path: "/rodados", element: <Rodados /> },
+                ],
+            },
+            {
+                element: <ProtectedRoute requiredPermission="estadocargas" />,
+                children: [
+                    { path: "/estadocargas", element: <EstadoCargas /> },
+                ],
+            },
+            {
+                element: <ProtectedRoute requiredPermission="resoluciones" />,
+                children: [
+                    { path: "/resoluciones", element: <Resoluciones /> },
                 ],
             },
             {
                 element: <ProtectedRoute allowedRoles={["admin"]} />,
                 children: [
-                    {
-                        path: "/usuarios",
-                        element: <Usuarios />,
-                    },
+                    { path: "/usuarios", element: <Usuarios /> },
                 ],
             },
         ],
