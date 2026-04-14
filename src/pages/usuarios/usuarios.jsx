@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getUsers, updateUser, createUser, deleteUser } from "../../redux/slices/auth/userSlice";
+import {
+    getUsers,
+    updateUser,
+    createUser,
+    deleteUser,
+} from "../../redux/slices/auth/userSlice";
 import { Div, H2, Button, Label, Input, Table } from "../../components";
 import { sweetAlert } from "../../components/alerts/SweetAlert";
 
@@ -47,7 +52,9 @@ const RoleBadge = ({ role }) => {
         viewer: "Visualizador",
     };
     return (
-        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${styles[role] || styles.viewer}`}>
+        <span
+            className={`px-2 py-1 rounded-full text-xs font-semibold ${styles[role] || styles.viewer}`}
+        >
             {labels[role] || role}
         </span>
     );
@@ -73,7 +80,9 @@ const Usuarios = () => {
 
     useEffect(() => {
         document.body.style.overflow = modalOpen ? "hidden" : "auto";
-        return () => { document.body.style.overflow = "auto"; };
+        return () => {
+            document.body.style.overflow = "auto";
+        };
     }, [modalOpen]);
 
     useEffect(() => {
@@ -118,10 +127,18 @@ const Usuarios = () => {
         const res = await dispatch(deleteUser(id));
 
         if (res.meta.requestStatus === "fulfilled") {
-            sweetAlert.fire({ type: "success", title: "Eliminado", message: "El usuario fue eliminado correctamente." });
+            sweetAlert.fire({
+                type: "success",
+                title: "Eliminado",
+                message: "El usuario fue eliminado correctamente.",
+            });
             dispatch(getUsers());
         } else {
-            sweetAlert.fire({ type: "error", title: "Error", message: "No se pudo eliminar el usuario." });
+            sweetAlert.fire({
+                type: "error",
+                title: "Error",
+                message: "No se pudo eliminar el usuario.",
+            });
         }
     };
 
@@ -142,60 +159,160 @@ const Usuarios = () => {
 
     const handleSubmit = async () => {
         if (!formData.name || !formData.surname || !formData.email) {
-            return sweetAlert.fire({ type: "warning", title: "Campos incompletos", message: "Nombre, apellido y email son obligatorios." });
+            return sweetAlert.fire({
+                type: "warning",
+                title: "Campos incompletos",
+                message: "Nombre, apellido y email son obligatorios.",
+            });
         }
         if (!editMode && !formData.password) {
-            return sweetAlert.fire({ type: "warning", title: "Contraseña requerida", message: "Debe ingresar una contraseña." });
+            return sweetAlert.fire({
+                type: "warning",
+                title: "Contraseña requerida",
+                message: "Debe ingresar una contraseña.",
+            });
         }
         if (formData.password && formData.password.length < 6) {
-            return sweetAlert.fire({ type: "warning", title: "Contraseña inválida", message: "La contraseña debe tener al menos 6 caracteres." });
+            return sweetAlert.fire({
+                type: "warning",
+                title: "Contraseña inválida",
+                message: "La contraseña debe tener al menos 6 caracteres.",
+            });
         }
 
         try {
             let res;
             if (editMode) {
-                const { name, surname, email, role, area, permissions } = formData;
-                res = await dispatch(updateUser({ id: editingId, data: { name, surname, email, role, area: area || null, permissions } }));
+                const { name, surname, email, role, area, permissions } =
+                    formData;
+                res = await dispatch(
+                    updateUser({
+                        id: editingId,
+                        data: {
+                            name,
+                            surname,
+                            email,
+                            role,
+                            area: area || null,
+                            permissions,
+                        },
+                    }),
+                );
             } else {
-                res = await dispatch(createUser({ ...formData, area: formData.area || null }));
+                res = await dispatch(
+                    createUser({ ...formData, area: formData.area || null }),
+                );
             }
 
             if (res.meta.requestStatus === "fulfilled") {
                 sweetAlert.fire({
                     type: "success",
                     title: editMode ? "Usuario actualizado" : "Usuario creado",
-                    message: editMode ? "Los cambios se guardaron correctamente." : "El usuario fue creado con éxito.",
+                    message: editMode
+                        ? "Los cambios se guardaron correctamente."
+                        : "El usuario fue creado con éxito.",
                 });
                 dispatch(getUsers());
                 resetForm();
                 setModalOpen(false);
             } else {
-                sweetAlert.fire({ type: "error", title: "Error", message: "No se pudo procesar la solicitud." });
+                sweetAlert.fire({
+                    type: "error",
+                    title: "Error",
+                    message: "No se pudo procesar la solicitud.",
+                });
             }
         } catch (e) {
-            sweetAlert.fire({ type: "error", title: "Error inesperado", message: "Ocurrió un error al procesar la operación." });
+            sweetAlert.fire({
+                type: "error",
+                title: "Error inesperado",
+                message: "Ocurrió un error al procesar la operación.",
+            });
+        }
+    };
+
+    const handleResetPassword = async (id) => {
+        const { value: newPassword } = await sweetAlert.fire({
+            type: "info",
+            title: "Restablecer contraseña",
+            message: "Ingresá la nueva contraseña para el usuario.",
+            input: "password",
+            inputPlaceholder: "Nueva contraseña",
+            showCancelButton: true,
+            confirmButtonText: "Guardar",
+            cancelButtonText: "Cancelar",
+        });
+
+        if (!newPassword) return;
+
+        if (newPassword.length < 6) {
+            return sweetAlert.fire({
+                type: "warning",
+                title: "Contraseña inválida",
+                message: "La contraseña debe tener al menos 6 caracteres.",
+            });
+        }
+
+        try {
+            const res = await dispatch(
+                updateUser({
+                    id,
+                    data: { password: newPassword },
+                }),
+            );
+
+            if (res.meta.requestStatus === "fulfilled") {
+                sweetAlert.fire({
+                    type: "success",
+                    title: "Contraseña actualizada",
+                    message: "La contraseña fue restablecida correctamente.",
+                });
+            } else {
+                sweetAlert.fire({
+                    type: "error",
+                    title: "Error",
+                    message: "No se pudo restablecer la contraseña.",
+                });
+            }
+        } catch (e) {
+            sweetAlert.fire({
+                type: "error",
+                title: "Error inesperado",
+                message: "Ocurrió un error al procesar la operación.",
+            });
         }
     };
 
     return (
-        <Div>
+        <Div className="w-full max-w-6xl mx-auto border border-gray-700 p-6 bg-gray-800 rounded-xl">
             <div className="border-b border-gray-700 pb-4 mb-6">
-                <H2 className="text-2xl font-bold text-white tracking-widest uppercase" label="Gestión de Usuarios" />
-                <p className="text-gray-400 text-sm mt-1">Administración de accesos y permisos del sistema</p>
+                <H2
+                    className="text-2xl font-bold text-white tracking-widest uppercase"
+                    label="Gestión de Usuarios"
+                />
+                <p className="text-gray-400 text-sm mt-1">
+                    Administración de accesos y permisos del sistema
+                </p>
             </div>
 
             <div className="flex justify-end mb-4">
                 <Button
                     text="+ Crear usuario"
                     className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl px-5 py-2 transition-all"
-                    onClick={() => { resetForm(); setModalOpen(true); }}
+                    onClick={() => {
+                        resetForm();
+                        setModalOpen(true);
+                    }}
                 />
             </div>
 
             <Table
                 data={list}
                 columns={[
-                    { header: "Nombre", render: (row) => `${row.name} ${row.surname}` },
+                    {
+                        header: "Nombre",
+                        render: (row) => `${row.name} ${row.surname}`,
+                    },
                     { header: "Email", key: "email" },
                     {
                         header: "Rol",
@@ -205,7 +322,11 @@ const Usuarios = () => {
                         header: "Área",
                         render: (row) => (
                             <span className="text-gray-300 text-sm">
-                                {row.area || <span className="text-gray-500">Sin área</span>}
+                                {row.area || (
+                                    <span className="text-gray-500">
+                                        Sin área
+                                    </span>
+                                )}
                             </span>
                         ),
                     },
@@ -213,14 +334,20 @@ const Usuarios = () => {
                         header: "Permisos",
                         render: (row) => (
                             <div className="flex flex-wrap gap-1 justify-center">
-                                {row.permissions?.length > 0
-                                    ? row.permissions.map((p) => (
-                                        <span key={p} className="px-2 py-0.5 bg-indigo-900 text-indigo-300 border border-indigo-700 rounded-full text-xs">
+                                {row.permissions?.length > 0 ? (
+                                    row.permissions.map((p) => (
+                                        <span
+                                            key={p}
+                                            className="px-2 py-0.5 bg-indigo-900 text-indigo-300 border border-indigo-700 rounded-full text-xs"
+                                        >
                                             {p}
                                         </span>
                                     ))
-                                    : <span className="text-gray-500 text-xs">Sin permisos</span>
-                                }
+                                ) : (
+                                    <span className="text-gray-500 text-xs">
+                                        Sin permisos
+                                    </span>
+                                )}
                             </div>
                         ),
                     },
@@ -234,6 +361,14 @@ const Usuarios = () => {
                                 >
                                     Editar
                                 </button>
+
+                                <button
+                                    className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-sm font-semibold transition-all"
+                                    onClick={() => handleResetPassword(row._id)}
+                                >
+                                    Contraseña
+                                </button>
+
                                 <button
                                     className="bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm font-semibold transition-all"
                                     onClick={() => handleDelete(row._id)}
@@ -250,18 +385,29 @@ const Usuarios = () => {
             {modalOpen && (
                 <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
                     <div className="bg-gray-900 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border border-gray-700 p-6">
-
                         {/* Header modal */}
                         <div className="flex justify-between items-center border-b border-gray-700 pb-4 mb-5">
                             <div>
                                 <h2 className="text-xl font-semibold text-white">
-                                    {editMode ? "Editar usuario" : "Crear nuevo usuario"}
+                                    {editMode
+                                        ? "Editar usuario"
+                                        : "Crear nuevo usuario"}
                                 </h2>
                                 <p className="text-gray-400 text-sm mt-0.5">
-                                    {editMode ? "Modificá los datos del usuario" : "Completá los datos para crear el usuario"}
+                                    {editMode
+                                        ? "Modificá los datos del usuario"
+                                        : "Completá los datos para crear el usuario"}
                                 </p>
                             </div>
-                            <button onClick={() => { resetForm(); setModalOpen(false); }} className="text-gray-400 hover:text-white text-xl transition-all">✕</button>
+                            <button
+                                onClick={() => {
+                                    resetForm();
+                                    setModalOpen(false);
+                                }}
+                                className="text-gray-400 hover:text-white text-xl transition-all"
+                            >
+                                ✕
+                            </button>
                         </div>
 
                         <div className="space-y-4">
@@ -269,29 +415,65 @@ const Usuarios = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label label="Nombre" />
-                                    <Input type="text" placeholder="Nombre" value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+                                    <Input
+                                        type="text"
+                                        placeholder="Nombre"
+                                        value={formData.name}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                name: e.target.value,
+                                            })
+                                        }
+                                    />
                                 </div>
                                 <div>
                                     <Label label="Apellido" />
-                                    <Input type="text" placeholder="Apellido" value={formData.surname}
-                                        onChange={(e) => setFormData({ ...formData, surname: e.target.value })} />
+                                    <Input
+                                        type="text"
+                                        placeholder="Apellido"
+                                        value={formData.surname}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                surname: e.target.value,
+                                            })
+                                        }
+                                    />
                                 </div>
                             </div>
 
                             {/* Email */}
                             <div>
                                 <Label label="Email" />
-                                <Input type="email" placeholder="usuario@correo.com" value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                                <Input
+                                    type="email"
+                                    placeholder="usuario@correo.com"
+                                    value={formData.email}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            email: e.target.value,
+                                        })
+                                    }
+                                />
                             </div>
 
                             {/* Contraseña solo en creación */}
                             {!editMode && (
                                 <div>
                                     <Label label="Contraseña" />
-                                    <Input type="password" placeholder="Mínimo 6 caracteres" value={formData.password}
-                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
+                                    <Input
+                                        type="password"
+                                        placeholder="Mínimo 6 caracteres"
+                                        value={formData.password}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                password: e.target.value,
+                                            })
+                                        }
+                                    />
                                 </div>
                             )}
 
@@ -301,11 +483,21 @@ const Usuarios = () => {
                                     <Label label="Rol" />
                                     <select
                                         value={formData.role}
-                                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                role: e.target.value,
+                                            })
+                                        }
                                         className="bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     >
                                         {ROLES.map((r) => (
-                                            <option key={r.value} value={r.value}>{r.label}</option>
+                                            <option
+                                                key={r.value}
+                                                value={r.value}
+                                            >
+                                                {r.label}
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
@@ -314,12 +506,19 @@ const Usuarios = () => {
                                     <Label label="Área" />
                                     <select
                                         value={formData.area}
-                                        onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                area: e.target.value,
+                                            })
+                                        }
                                         className="bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     >
                                         <option value="">Sin área</option>
                                         {AREAS.map((a) => (
-                                            <option key={a} value={a}>{a}</option>
+                                            <option key={a} value={a}>
+                                                {a}
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
@@ -333,18 +532,27 @@ const Usuarios = () => {
                                         <label
                                             key={p.value}
                                             className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all
-                                                ${formData.permissions.includes(p.value)
-                                                    ? "bg-indigo-900 border-indigo-500 text-indigo-300"
-                                                    : "bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-400"
+                                                ${
+                                                    formData.permissions.includes(
+                                                        p.value,
+                                                    )
+                                                        ? "bg-indigo-900 border-indigo-500 text-indigo-300"
+                                                        : "bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-400"
                                                 }`}
                                         >
                                             <input
                                                 type="checkbox"
-                                                checked={formData.permissions.includes(p.value)}
-                                                onChange={() => togglePermission(p.value)}
+                                                checked={formData.permissions.includes(
+                                                    p.value,
+                                                )}
+                                                onChange={() =>
+                                                    togglePermission(p.value)
+                                                }
                                                 className="accent-indigo-500"
                                             />
-                                            <span className="text-sm font-medium">{p.label}</span>
+                                            <span className="text-sm font-medium">
+                                                {p.label}
+                                            </span>
                                         </label>
                                     ))}
                                 </div>
@@ -354,7 +562,10 @@ const Usuarios = () => {
                         {/* Botones */}
                         <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-700">
                             <button
-                                onClick={() => { resetForm(); setModalOpen(false); }}
+                                onClick={() => {
+                                    resetForm();
+                                    setModalOpen(false);
+                                }}
                                 className="px-5 py-2 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700 transition-all"
                             >
                                 Cancelar
