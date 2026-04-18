@@ -1,7 +1,7 @@
 import Home from "./home/Home";
 import EstadoCargas from "./estadoCargas/estadoCargas";
-import Resoluciones from "./resoluciones/resoluciones";
+import GestionSua from "./gestionesSua/gestionSua";
 import Rodados from "./rodados/rodados";
 import Usuarios from "./usuarios/usuarios";
 
-export { Home, EstadoCargas, Resoluciones, Rodados, Usuarios };
+export { Home, EstadoCargas, GestionSua, Rodados, Usuarios };

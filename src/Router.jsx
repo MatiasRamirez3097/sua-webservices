@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import Layout from "./layout/Layout";
-import { EstadoCargas, Home, Resoluciones, Rodados, Usuarios } from "./pages";
+import { EstadoCargas, Home, GestionSua, Rodados, Usuarios } from "./pages";
 import { ProtectedRoute } from "./components";
 
 const router = createBrowserRouter([
@@ -17,9 +17,7 @@ const router = createBrowserRouter([
             },
             {
                 element: <ProtectedRoute requiredPermission="rodados" />,
-                children: [
-                    { path: "/rodados", element: <Rodados /> },
-                ],
+                children: [{ path: "/rodados", element: <Rodados /> }],
             },
             {
                 element: <ProtectedRoute requiredPermission="estadocargas" />,
@@ -29,15 +27,11 @@ const router = createBrowserRouter([
             },
             {
                 element: <ProtectedRoute requiredPermission="resoluciones" />,
-                children: [
-                    { path: "/resoluciones", element: <Resoluciones /> },
-                ],
+                children: [{ path: "/gestionSua", element: <GestionSua /> }],
             },
             {
                 element: <ProtectedRoute allowedRoles={["admin"]} />,
-                children: [
-                    { path: "/usuarios", element: <Usuarios /> },
-                ],
+                children: [{ path: "/usuarios", element: <Usuarios /> }],
             },
         ],
     },

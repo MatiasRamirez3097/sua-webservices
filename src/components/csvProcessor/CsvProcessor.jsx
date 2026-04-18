@@ -11,40 +11,21 @@ const CsvProcessor = ({
     status,
     headers,
     rowStatus,
+    fileInputId = "file-upload", // ✅ prop nuevo con valor por defecto
 }) => {
-    const getRowStyle = (index) => {
-        if (!rowStatus) return {};
-
-        const state = rowStatus[index];
-        if (state === "success") return { backgroundColor: "#d4edda" };
-        if (state === "error") return { backgroundColor: "#f8d7da" };
-
-        return {};
-    };
-
     return (
         <div className="space-y-6">
-            {/* Título */}
-            <div className="border-b border-gray-700 pb-4">
-                <h2 className="text-2xl font-bold text-white tracking-widest uppercase">
-                    Procesador de CSV
-                </h2>
-                <p className="text-gray-400 text-sm mt-1">
-                    Seleccioná un archivo .csv para cargar y procesar
-                </p>
-            </div>
-
             {/* Zona de carga */}
             <div className="flex flex-col items-center gap-4">
                 <label
-                    htmlFor="file-upload"
-                    className="w-full max-w-md h-36 flex flex-col items-center justify-center
-                           bg-gray-700 border-2 border-dashed border-indigo-500
-                           rounded-xl cursor-pointer hover:bg-gray-600 hover:border-indigo-400 transition-all"
+                    htmlFor={fileInputId} // ✅ usa el prop
+                    className="w-full h-32 flex flex-col items-center justify-center
+                               bg-gray-700/50 border-2 border-dashed border-indigo-500/50
+                               rounded-xl cursor-pointer hover:bg-gray-700 hover:border-indigo-400 transition-all"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-8 w-8 text-indigo-400 mb-2"
+                        className="h-7 w-7 text-indigo-400 mb-2"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -67,23 +48,23 @@ const CsvProcessor = ({
                 </label>
 
                 <input
-                    id="file-upload"
+                    id={fileInputId} // ✅ usa el prop
                     type="file"
                     accept=".csv"
                     onChange={handleFileChange}
                     className="hidden"
                 />
 
-                <div className="flex gap-4">
+                <div className="flex gap-3">
                     <button
                         onClick={handleParse}
                         disabled={!file}
-                        className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all
-                        ${
-                            file
-                                ? "bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"
-                                : "bg-gray-700 text-gray-500 cursor-not-allowed"
-                        }`}
+                        className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all
+                            ${
+                                file
+                                    ? "bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"
+                                    : "bg-gray-700 text-gray-500 cursor-not-allowed"
+                            }`}
                     >
                         Cargar y mostrar CSV
                     </button>
@@ -91,12 +72,12 @@ const CsvProcessor = ({
                     <button
                         onClick={handleProcessAPI}
                         disabled={jsonData.length === 0}
-                        className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all
-                        ${
-                            jsonData.length > 0
-                                ? "bg-green-600 hover:bg-green-500 text-white cursor-pointer"
-                                : "bg-gray-700 text-gray-500 cursor-not-allowed"
-                        }`}
+                        className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all
+                            ${
+                                jsonData.length > 0
+                                    ? "bg-green-600 hover:bg-green-500 text-white cursor-pointer"
+                                    : "bg-gray-700 text-gray-500 cursor-not-allowed"
+                            }`}
                     >
                         Procesar {jsonData.length} filas
                     </button>

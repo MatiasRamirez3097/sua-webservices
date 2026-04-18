@@ -13,45 +13,71 @@ const Navbar = ({
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-23">
                     <div className="flex items-center space-x-3">
-                        <img src={Logo} className="h-22 w-auto object-contain" />
+                        <img
+                            src={Logo}
+                            className="h-22 w-auto object-contain"
+                        />
                         <span className="font-semibold text-xl tracking-wide">
                             SUA Webservices
                         </span>
                     </div>
 
                     <div className="hidden md:flex items-center space-x-10">
-                        <Link to="/home" className="hover:text-indigo-400 transition-colors">
+                        <Link
+                            to="/home"
+                            className="hover:text-indigo-400 transition-colors"
+                        >
                             Home
                         </Link>
 
                         <RoleGuard requiredPermission="rodados">
-                            <Link to="/rodados" className="hover:text-indigo-400 transition-colors">
+                            <Link
+                                to="/rodados"
+                                className="hover:text-indigo-400 transition-colors"
+                            >
                                 Rodados
                             </Link>
                         </RoleGuard>
 
                         <RoleGuard requiredPermission="estadocargas">
-                            <Link to="/estadocargas" className="hover:text-indigo-400 transition-colors">
+                            <Link
+                                to="/estadocargas"
+                                className="hover:text-indigo-400 transition-colors"
+                            >
                                 Estado de cargas
                             </Link>
                         </RoleGuard>
 
                         <RoleGuard requiredPermission="resoluciones">
-                            <Link to="/resoluciones" className="hover:text-indigo-400 transition-colors">
-                                Resoluciones
+                            <Link
+                                to="/gestionSua"
+                                className="hover:text-indigo-400 transition-colors"
+                            >
+                                Gestión SUA
                             </Link>
                         </RoleGuard>
 
                         <RoleGuard allowedRoles={["admin"]}>
-                            <Link to="/usuarios" className="hover:text-indigo-400 transition-colors">
+                            <Link
+                                to="/usuarios"
+                                className="hover:text-indigo-400 transition-colors"
+                            >
                                 Usuarios
                             </Link>
                         </RoleGuard>
 
                         {Object.keys(user).length === 0 ? (
-                            <Button text="Iniciar sesion" className="text-indigo-400" onClick={toggleLogin} />
+                            <Button
+                                text="Iniciar sesion"
+                                className="text-indigo-400"
+                                onClick={toggleLogin}
+                            />
                         ) : (
-                            <Button text="Cerrar sesion" className="text-indigo-400" onClick={logout} />
+                            <Button
+                                text="Cerrar sesion"
+                                className="text-indigo-400"
+                                onClick={logout}
+                            />
                         )}
                     </div>
                 </div>
