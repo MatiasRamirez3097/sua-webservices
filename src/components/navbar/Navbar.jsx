@@ -30,7 +30,7 @@ const Navbar = ({
                             Home
                         </Link>
 
-                        <RoleGuard requiredPermission="rodados">
+                        <RoleGuard module="rodados">
                             <Link
                                 to="/rodados"
                                 className="hover:text-indigo-400 transition-colors"
@@ -39,7 +39,7 @@ const Navbar = ({
                             </Link>
                         </RoleGuard>
 
-                        <RoleGuard requiredPermission="estadocargas">
+                        <RoleGuard module="estadocargas">
                             <Link
                                 to="/estadocargas"
                                 className="hover:text-indigo-400 transition-colors"
@@ -48,7 +48,7 @@ const Navbar = ({
                             </Link>
                         </RoleGuard>
 
-                        <RoleGuard requiredPermission="resoluciones">
+                        <RoleGuard module="gestionsua">
                             <Link
                                 to="/gestionSua"
                                 className="hover:text-indigo-400 transition-colors"
@@ -57,14 +57,9 @@ const Navbar = ({
                             </Link>
                         </RoleGuard>
 
-                        <RoleGuard allowedRoles={["admin"]}>
-                            <Link
-                                to="/usuarios"
-                                className="hover:text-indigo-400 transition-colors"
-                            >
-                                Usuarios
-                            </Link>
-                        </RoleGuard>
+                        {user.role === "admin" && (
+                            <Link to="/usuarios">Usuarios</Link>
+                        )}
 
                         {Object.keys(user).length === 0 ? (
                             <Button

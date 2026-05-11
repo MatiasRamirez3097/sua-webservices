@@ -16,21 +16,21 @@ const router = createBrowserRouter([
                 element: <Home />,
             },
             {
-                element: <ProtectedRoute requiredPermission="rodados" />,
+                element: <ProtectedRoute module="rodados" />,
                 children: [{ path: "/rodados", element: <Rodados /> }],
             },
             {
-                element: <ProtectedRoute requiredPermission="estadocargas" />,
+                element: <ProtectedRoute module="estadocargas" />,
                 children: [
                     { path: "/estadocargas", element: <EstadoCargas /> },
                 ],
             },
             {
-                element: <ProtectedRoute requiredPermission="resoluciones" />,
-                children: [{ path: "/gestionSua", element: <GestionSua /> }],
+                element: <ProtectedRoute module="gestionsua" />,
+                children: [{ path: "/gestionsua", element: <GestionSua /> }],
             },
             {
-                element: <ProtectedRoute allowedRoles={["admin"]} />,
+                element: <ProtectedRoute adminOnly />,
                 children: [{ path: "/usuarios", element: <Usuarios /> }],
             },
         ],

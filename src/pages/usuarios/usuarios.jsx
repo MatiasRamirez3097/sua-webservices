@@ -23,18 +23,22 @@ const AREAS = [
     "Centro de Informatica",
 ];
 
-const PERMISSIONS = [
+const MODULES = [
     { value: "rodados", label: "Rodados" },
     { value: "estadocargas", label: "Estado de Cargas" },
-    { value: "resoluciones", label: "Resoluciones" },
-    { value: "usuarios", label: "Usuarios" },
+    { value: "gestionsua", label: "Gestión SUA" },
 ];
 
-const ROLES = [
-    { value: "admin", label: "Administrador" },
+const MODULE_ROLES = [
     { value: "manager", label: "Manager" },
     { value: "operator", label: "Operador" },
     { value: "viewer", label: "Visualizador" },
+];
+
+const GLOBAL_ROLES = [
+    { value: "", label: "Sin rol global" },
+    { value: "admin", label: "Administrador" },
+    { value: "fiscalizado", label: "Fiscalizado" },
 ];
 
 // Badge de rol con color
@@ -67,7 +71,7 @@ const Usuarios = () => {
         surname: "",
         email: "",
         password: "",
-        role: "viewer",
+        role: "",
         area: "",
         permissions: [],
     });
@@ -95,7 +99,7 @@ const Usuarios = () => {
             surname: "",
             email: "",
             password: "",
-            role: "viewer",
+            role: "",
             area: "",
             permissions: [],
         });
@@ -103,12 +107,38 @@ const Usuarios = () => {
         setEditingId(null);
     };
 
-    const togglePermission = (value) => {
+    const toggleModule = (moduleValue) => {
+        setFormData((prev) => {
+            const exists = prev.permissions.find(
+                (p) => p.module === moduleValue,
+            );
+            if (exists) {
+                // Si lo destildás, lo eliminás
+                return {
+                    ...prev,
+                    permissions: prev.permissions.filter(
+                        (p) => p.module !== moduleValue,
+                    ),
+                };
+            } else {
+                // Si lo tildás, lo agregás con rol viewer por defecto
+                return {
+                    ...prev,
+                    permissions: [
+                        ...prev.permissions,
+                        { module: moduleValue, role: "viewer" },
+                    ],
+                };
+            }
+        });
+    };
+
+    const changeModuleRole = (moduleValue, newRole) => {
         setFormData((prev) => ({
             ...prev,
-            permissions: prev.permissions.includes(value)
-                ? prev.permissions.filter((p) => p !== value)
-                : [...prev.permissions, value],
+            permissions: prev.permissions.map((p) =>
+                p.module === moduleValue ? { ...p, role: newRole } : p,
+            ),
         }));
     };
 
@@ -148,7 +178,7 @@ const Usuarios = () => {
             surname: user.surname,
             email: user.email,
             password: "",
-            role: user.role || "viewer",
+            role: user.role || "",
             area: user.area || "",
             permissions: user.permissions || [],
         });
@@ -335,14 +365,26 @@ const Usuarios = () => {
                         render: (row) => (
                             <div className="flex flex-wrap gap-1 justify-center">
                                 {row.permissions?.length > 0 ? (
-                                    row.permissions.map((p) => (
-                                        <span
-                                            key={p}
-                                            className="px-2 py-0.5 bg-indigo-900 text-indigo-300 border border-indigo-700 rounded-full text-xs"
-                                        >
-                                            {p}
-                                        </span>
-                                    ))
+                                    row.permissions.map((p) => {
+                                        const moduleLabel =
+                                            MODULES.find(
+                                                (m) => m.value === p.module,
+                                            )?.label || p.module;
+
+                                        const roleLabel =
+                                            MODULE_ROLES.find(
+                                                (r) => r.value === p.role,
+                                            )?.label || p.role;
+
+                                        return (
+                                            <span
+                                                key={`${p.module}-${p.role}`}
+                                                className="px-2 py-0.5 bg-indigo-900 text-indigo-300 border border-indigo-700 rounded-full text-xs"
+                                            >
+                                                {moduleLabel}: {roleLabel}
+                                            </span>
+                                        );
+                                    })
                                 ) : (
                                     <span className="text-gray-500 text-xs">
                                         Sin permisos
@@ -477,21 +519,20 @@ const Usuarios = () => {
                                 </div>
                             )}
 
-                            {/* Rol y Área */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="flex flex-col gap-1">
-                                    <Label label="Rol" />
+                                    <Label label="Rol global" />
                                     <select
-                                        value={formData.role}
+                                        value={formData.role || ""}
                                         onChange={(e) =>
                                             setFormData({
                                                 ...formData,
-                                                role: e.target.value,
+                                                role: e.target.value || null,
                                             })
                                         }
                                         className="bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     >
-                                        {ROLES.map((r) => (
+                                        {GLOBAL_ROLES.map((r) => (
                                             <option
                                                 key={r.value}
                                                 value={r.value}
@@ -500,6 +541,10 @@ const Usuarios = () => {
                                             </option>
                                         ))}
                                     </select>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Admin: acceso total. Fiscalizado: ve
+                                        todas las áreas sin restricción.
+                                    </p>
                                 </div>
 
                                 <div className="flex flex-col gap-1">
@@ -524,37 +569,74 @@ const Usuarios = () => {
                                 </div>
                             </div>
 
-                            {/* Permisos */}
                             <div>
-                                <Label label="Permisos de acceso" />
-                                <div className="grid grid-cols-2 gap-2 mt-2">
-                                    {PERMISSIONS.map((p) => (
-                                        <label
-                                            key={p.value}
-                                            className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all
-                                                ${
-                                                    formData.permissions.includes(
-                                                        p.value,
-                                                    )
-                                                        ? "bg-indigo-900 border-indigo-500 text-indigo-300"
-                                                        : "bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-400"
-                                                }`}
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={formData.permissions.includes(
-                                                    p.value,
+                                <Label label="Permisos y roles por módulo" />
+                                <div className="space-y-2 mt-2">
+                                    {MODULES.map((mod) => {
+                                        const perm = formData.permissions.find(
+                                            (p) => p.module === mod.value,
+                                        );
+                                        const isActive = !!perm;
+
+                                        return (
+                                            <div
+                                                key={mod.value}
+                                                className={`flex items-center justify-between px-3 py-2.5 rounded-lg border transition-all
+                        ${
+                            isActive
+                                ? "bg-indigo-900/40 border-indigo-500"
+                                : "bg-gray-800 border-gray-600"
+                        }`}
+                                            >
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isActive}
+                                                        onChange={() =>
+                                                            toggleModule(
+                                                                mod.value,
+                                                            )
+                                                        }
+                                                        className="accent-indigo-500"
+                                                    />
+                                                    <span
+                                                        className={`text-sm font-medium ${isActive ? "text-indigo-300" : "text-gray-400"}`}
+                                                    >
+                                                        {mod.label}
+                                                    </span>
+                                                </label>
+
+                                                {/* ✅ Selector de rol solo visible si el módulo está activo */}
+                                                {isActive && (
+                                                    <select
+                                                        value={perm.role}
+                                                        onChange={(e) =>
+                                                            changeModuleRole(
+                                                                mod.value,
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        className="bg-gray-700 border border-gray-500 text-white text-sm rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                                    >
+                                                        {MODULE_ROLES.map(
+                                                            (r) => (
+                                                                <option
+                                                                    key={
+                                                                        r.value
+                                                                    }
+                                                                    value={
+                                                                        r.value
+                                                                    }
+                                                                >
+                                                                    {r.label}
+                                                                </option>
+                                                            ),
+                                                        )}
+                                                    </select>
                                                 )}
-                                                onChange={() =>
-                                                    togglePermission(p.value)
-                                                }
-                                                className="accent-indigo-500"
-                                            />
-                                            <span className="text-sm font-medium">
-                                                {p.label}
-                                            </span>
-                                        </label>
-                                    ))}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>

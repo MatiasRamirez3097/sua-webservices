@@ -1,18 +1,21 @@
 import { useSelector } from "react-redux";
 
-const RoleGuard = ({ allowedRoles, requiredPermission, children }) => {
+const RoleGuard = ({ module, allowedRoles, children }) => {
     const { user } = useSelector((store) => store.auth);
 
-    if (!user || !user.role) return null;
+    if (!user) return null;
 
     if (user.role === "admin") return children;
 
-    if (requiredPermission) {
-        return user.permissions?.includes(requiredPermission) ? children : null;
-    }
+    //  Si se pasa un module, busca el permiso correspondiente
+    if (module) {
+        const perm = user.permissions?.find((p) => p.module === module);
+        if (!perm) return null;
 
-    if (allowedRoles) {
-        return allowedRoles.includes(user.role) ? children : null;
+        // Si no se especifican roles permitidos, con tener el permiso alcanza
+        if (!allowedRoles) return children;
+
+        return allowedRoles.includes(perm.role) ? children : null;
     }
 
     return null;

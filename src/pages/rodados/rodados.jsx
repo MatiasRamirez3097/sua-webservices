@@ -23,42 +23,79 @@ const getDayDate = (weekStart, dayIndex) => {
     return d.toISOString().split("T")[0];
 };
 
-const DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+const DAYS = [
+    "Lunes",
+    "Martes",
+    "Miércoles",
+    "Jueves",
+    "Viernes",
+    "Sábado",
+    "Domingo",
+];
 
 const AREAS = [
-    "Arbolado", "Espacios Verdes", "Control de Vectores",
-    "Escuela de jardineria", "Vivero", "Taller", "Despacho",
-    "Paisajismo", "Inspeccion", "Departamento Tecnico",
+    "Arbolado",
+    "Espacios Verdes",
+    "Control de Vectores",
+    "Escuela de jardineria",
+    "Vivero",
+    "Taller",
+    "Despacho",
+    "Paisajismo",
+    "Inspeccion",
+    "Departamento Tecnico",
 ];
 
 // ─── Datos mock ───────────────────────────────────────────────────────────────
 const MOCK_PEDIDOS = [
     {
-        id: "1", area: "Arbolado", fecha: "2026-04-07",
-        horario: "08:00 - 12:00", vehiculo: "Toyota Hilux - ABC123",
-        chofer: "Juan Pérez", estado: "confirmado",
+        id: "1",
+        area: "Arbolado",
+        fecha: "2026-04-07",
+        horario: "08:00 - 12:00",
+        vehiculo: "Toyota Hilux - ABC123",
+        chofer: "Juan Pérez",
+        estado: "confirmado",
         observaciones: "Traslado de materiales al vivero",
     },
     {
-        id: "2", area: "Arbolado", fecha: "2026-04-09",
-        horario: "09:00 - 14:00", vehiculo: null, chofer: null,
-        estado: "pendiente", observaciones: "Poda de árboles zona norte",
+        id: "2",
+        area: "Arbolado",
+        fecha: "2026-04-09",
+        horario: "09:00 - 14:00",
+        vehiculo: null,
+        chofer: null,
+        estado: "pendiente",
+        observaciones: "Poda de árboles zona norte",
     },
     {
-        id: "3", area: "Espacios Verdes", fecha: "2026-04-08",
-        horario: "07:00 - 11:00", vehiculo: "Ford Transit - XYZ789",
-        chofer: "Carlos López", estado: "confirmado",
+        id: "3",
+        area: "Espacios Verdes",
+        fecha: "2026-04-08",
+        horario: "07:00 - 11:00",
+        vehiculo: "Ford Transit - XYZ789",
+        chofer: "Carlos López",
+        estado: "confirmado",
         observaciones: "Mantenimiento plazas",
     },
     {
-        id: "4", area: "Vivero", fecha: "2026-04-10",
-        horario: "10:00 - 13:00", vehiculo: null, chofer: null,
-        estado: "rechazado", observaciones: "Sin vehículos disponibles",
+        id: "4",
+        area: "Vivero",
+        fecha: "2026-04-10",
+        horario: "10:00 - 13:00",
+        vehiculo: null,
+        chofer: null,
+        estado: "rechazado",
+        observaciones: "Sin vehículos disponibles",
     },
     {
-        id: "5", area: "Despacho", fecha: "2026-04-11",
-        horario: "08:00 - 16:00", vehiculo: "Renault Master - DEF456",
-        chofer: "Roberto Silva", estado: "pendiente",
+        id: "5",
+        area: "Despacho",
+        fecha: "2026-04-11",
+        horario: "08:00 - 16:00",
+        vehiculo: "Renault Master - DEF456",
+        chofer: "Roberto Silva",
+        estado: "pendiente",
         observaciones: "Entrega de documentación",
     },
 ];
@@ -76,7 +113,9 @@ const EstadoBadge = ({ estado }) => {
         rechazado: "Rechazado",
     };
     return (
-        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${styles[estado]}`}>
+        <span
+            className={`px-2 py-0.5 rounded-full text-xs font-semibold ${styles[estado]}`}
+        >
             {labels[estado]}
         </span>
     );
@@ -87,17 +126,28 @@ const ModalDetalle = ({ pedidos, area, fecha, onClose, userRole }) => {
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
             <div className="bg-gray-900 w-full max-w-md rounded-2xl border border-gray-700 shadow-2xl p-6">
-
                 <div className="flex justify-between items-center border-b border-gray-700 pb-4 mb-5">
                     <div>
-                        <h2 className="text-lg font-semibold text-white">{area}</h2>
+                        <h2 className="text-lg font-semibold text-white">
+                            {area}
+                        </h2>
                         <p className="text-gray-400 text-sm mt-0.5">
-                            {new Date(fecha + "T00:00:00").toLocaleDateString("es-AR", {
-                                weekday: "long", day: "numeric", month: "long",
-                            })}
+                            {new Date(fecha + "T00:00:00").toLocaleDateString(
+                                "es-AR",
+                                {
+                                    weekday: "long",
+                                    day: "numeric",
+                                    month: "long",
+                                },
+                            )}
                         </p>
                     </div>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white text-xl">✕</button>
+                    <button
+                        onClick={onClose}
+                        className="text-gray-400 hover:text-white text-xl"
+                    >
+                        ✕
+                    </button>
                 </div>
 
                 <div className="space-y-4 max-h-96 overflow-y-auto">
@@ -107,22 +157,31 @@ const ModalDetalle = ({ pedidos, area, fecha, onClose, userRole }) => {
                         </p>
                     ) : (
                         pedidos.map((pedido) => (
-                            <div key={pedido.id} className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                            <div
+                                key={pedido.id}
+                                className="bg-gray-800 rounded-xl p-4 border border-gray-700"
+                            >
                                 <div className="flex justify-between items-start mb-3">
-                                    <span className="text-white font-medium text-sm">{pedido.horario}</span>
+                                    <span className="text-white font-medium text-sm">
+                                        {pedido.horario}
+                                    </span>
                                     <EstadoBadge estado={pedido.estado} />
                                 </div>
 
                                 {pedido.vehiculo && (
                                     <div className="flex gap-2 text-sm text-gray-300 mb-1">
-                                        <span className="text-gray-500">Vehículo:</span>
+                                        <span className="text-gray-500">
+                                            Vehículo:
+                                        </span>
                                         <span>{pedido.vehiculo}</span>
                                     </div>
                                 )}
 
                                 {pedido.chofer && (
                                     <div className="flex gap-2 text-sm text-gray-300 mb-1">
-                                        <span className="text-gray-500">Chofer:</span>
+                                        <span className="text-gray-500">
+                                            Chofer:
+                                        </span>
                                         <span>{pedido.chofer}</span>
                                     </div>
                                 )}
@@ -134,7 +193,8 @@ const ModalDetalle = ({ pedidos, area, fecha, onClose, userRole }) => {
                                 )}
 
                                 {/* Confirmar/Rechazar solo admin y manager */}
-                                {(userRole === "admin" || userRole === "manager") &&
+                                {(userRole === "admin" ||
+                                    userRole === "manager") &&
                                     pedido.estado === "pendiente" && (
                                         <div className="flex gap-2 mt-3">
                                             <button className="flex-1 bg-green-700 hover:bg-green-600 text-white text-xs font-semibold py-1.5 rounded-lg transition-all">
@@ -144,8 +204,7 @@ const ModalDetalle = ({ pedidos, area, fecha, onClose, userRole }) => {
                                                 Rechazar
                                             </button>
                                         </div>
-                                    )
-                                }
+                                    )}
                             </div>
                         ))
                     )}
@@ -200,7 +259,9 @@ const CeldaCalendario = ({ pedidos, onClick }) => {
                 </div>
             ))}
             {pedidos.length > 2 && (
-                <span className="text-xs text-gray-400">+{pedidos.length - 2} más</span>
+                <span className="text-xs text-gray-400">
+                    +{pedidos.length - 2} más
+                </span>
             )}
         </div>
     );
@@ -231,11 +292,6 @@ const Rodados = () => {
         setWeekStart(next);
     };
 
-    // ✅ Operator ve solo su área, el resto ve todas
-    const areas = (user.role === "operator" && user.area)
-        ? AREAS.filter((a) => a === user.area)
-        : AREAS;
-
     const getPedidosParaCelda = (area, dayIndex) => {
         const fecha = getDayDate(weekStart, dayIndex);
         return MOCK_PEDIDOS.filter((p) => p.area === area && p.fecha === fecha);
@@ -247,12 +303,28 @@ const Rodados = () => {
         setModalData({ area, fecha, pedidos });
     };
 
+    const rodadosPerm = user.permissions?.find((p) => p.module === "rodados");
+
+    // ✅ Ve todas las áreas si es admin, fiscalizado o manager de rodados
+    const verTodasLasAreas =
+        user.role === "admin" ||
+        user.role === "fiscalizado" ||
+        rodadosPerm?.role === "manager";
+
+    const areas = verTodasLasAreas
+        ? AREAS
+        : AREAS.filter((a) => a === user.area);
+
     return (
         <>
             {/* ── BOTONERA ── */}
             <Div className="w-full max-w-4xl mx-auto border border-gray-700 p-6 bg-gray-800 rounded-xl mb-8">
                 <div className="flex items-center justify-center gap-3 mb-6 border-b border-gray-700 pb-4">
-                    <img src={CamionIcon} alt="Sistema de Rodados" className="w-8 h-8 opacity-90" />
+                    <img
+                        src={CamionIcon}
+                        alt="Sistema de Rodados"
+                        className="w-8 h-8 opacity-90"
+                    />
                     <h2 className="text-white text-xl font-semibold tracking-widest uppercase">
                         Sistema de Rodados
                     </h2>
@@ -266,17 +338,38 @@ const Rodados = () => {
                             className="cursor-pointer py-3 rounded-lg border border-indigo-500 bg-indigo-800 hover:bg-indigo-600 text-white transition-colors"
                         >
                             <div className="flex items-center justify-center gap-3">
-                                <img src={PlanillaIcon} alt="Planificación" className="w-10 h-10 opacity-90" />
-                                <span className="text-sm font-medium tracking-wide">PLANIFICACIÓN</span>
+                                <img
+                                    src={PlanillaIcon}
+                                    alt="Planificación"
+                                    className="w-10 h-10 opacity-90"
+                                />
+                                <span className="text-sm font-medium tracking-wide">
+                                    PLANIFICACIÓN
+                                </span>
                             </div>
                         </div>
                         {openSection === "planificacion" && (
                             <div className="mt-2 bg-gray-800 border border-gray-600 rounded-lg p-3 flex flex-col gap-2">
-                                <Button text="Nueva solicitud" className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full" />
-                                <Button text="Solicitudes" className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full" />
-                                <Button text="Asignación" className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full" />
-                                <Button text="Choferes" className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full" />
-                                <Button text="Vehículos" className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full" />
+                                <Button
+                                    text="Nueva solicitud"
+                                    className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full"
+                                />
+                                <Button
+                                    text="Solicitudes"
+                                    className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full"
+                                />
+                                <Button
+                                    text="Asignación"
+                                    className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full"
+                                />
+                                <Button
+                                    text="Choferes"
+                                    className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full"
+                                />
+                                <Button
+                                    text="Vehículos"
+                                    className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full"
+                                />
                             </div>
                         )}
                     </div>
@@ -288,16 +381,34 @@ const Rodados = () => {
                             className="cursor-pointer py-3 rounded-lg border border-indigo-500 bg-indigo-800 hover:bg-indigo-600 text-white transition-colors"
                         >
                             <div className="flex items-center justify-center gap-3">
-                                <img src={OperarioIcon} alt="Agentes" className="w-10 h-10 opacity-90" />
-                                <span className="text-sm font-medium tracking-wide">AGENTES</span>
+                                <img
+                                    src={OperarioIcon}
+                                    alt="Agentes"
+                                    className="w-10 h-10 opacity-90"
+                                />
+                                <span className="text-sm font-medium tracking-wide">
+                                    AGENTES
+                                </span>
                             </div>
                         </div>
                         {openSection === "agentes" && (
                             <div className="mt-2 bg-gray-800 border border-gray-600 rounded-lg p-3 flex flex-col gap-2">
-                                <Button text="Agregar Vehículos" className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full" />
-                                <Button text="Agregar Propietarios" className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full" />
-                                <Button text="Agregar Choferes" className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full" />
-                                <Button text="Registrar Provisorio" className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full" />
+                                <Button
+                                    text="Agregar Vehículos"
+                                    className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full"
+                                />
+                                <Button
+                                    text="Agregar Propietarios"
+                                    className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full"
+                                />
+                                <Button
+                                    text="Agregar Choferes"
+                                    className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full"
+                                />
+                                <Button
+                                    text="Registrar Provisorio"
+                                    className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full"
+                                />
                             </div>
                         )}
                     </div>
@@ -309,16 +420,34 @@ const Rodados = () => {
                             className="cursor-pointer py-3 rounded-lg border border-indigo-500 bg-indigo-800 hover:bg-indigo-600 text-white transition-colors"
                         >
                             <div className="flex items-center justify-center gap-3">
-                                <img src={RelojIcon} alt="Horas" className="w-10 h-10 opacity-90" />
-                                <span className="text-sm font-medium tracking-wide">HORAS</span>
+                                <img
+                                    src={RelojIcon}
+                                    alt="Horas"
+                                    className="w-10 h-10 opacity-90"
+                                />
+                                <span className="text-sm font-medium tracking-wide">
+                                    HORAS
+                                </span>
                             </div>
                         </div>
                         {openSection === "horas" && (
                             <div className="mt-2 bg-gray-800 border border-gray-600 rounded-lg p-3 flex flex-col gap-2">
-                                <Button text="Horas de cupo" className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full" />
-                                <Button text="Horas adicionales" className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full" />
-                                <Button text="Definir adicionales" className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full" />
-                                <Button text="Hojas de ruta" className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full" />
+                                <Button
+                                    text="Horas de cupo"
+                                    className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full"
+                                />
+                                <Button
+                                    text="Horas adicionales"
+                                    className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full"
+                                />
+                                <Button
+                                    text="Definir adicionales"
+                                    className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full"
+                                />
+                                <Button
+                                    text="Hojas de ruta"
+                                    className="bg-indigo-700 hover:bg-indigo-500 px-2 py-1.5 rounded-md text-white text-xs w-full"
+                                />
                             </div>
                         )}
                     </div>
@@ -327,11 +456,14 @@ const Rodados = () => {
 
             {/* ── CALENDARIO ── */}
             <Div className="border border-gray-700 p-6 bg-gray-800 rounded-xl mb-8">
-
                 <div className="border-b border-gray-700 pb-4 mb-6 relative">
-                    <H2 className="text-2xl font-bold text-white tracking-widest uppercase text-center" label="Calendario Semanal" />
+                    <H2
+                        className="text-2xl font-bold text-white tracking-widest uppercase text-center"
+                        label="Calendario Semanal"
+                    />
                     <p className="text-gray-400 text-sm text-center mt-1">
-                        Semana del {formatDate(weekStart)} al {formatDate(weekEnd)}
+                        Semana del {formatDate(weekStart)} al{" "}
+                        {formatDate(weekEnd)}
                     </p>
                     <Button
                         text="← Anterior"
@@ -353,8 +485,12 @@ const Rodados = () => {
                         { color: "bg-red-700", label: "Rechazado" },
                     ].map(({ color, label }) => (
                         <div key={label} className="flex items-center gap-1.5">
-                            <div className={`w-3 h-3 rounded-full ${color}`}></div>
-                            <span className="text-xs text-gray-400">{label}</span>
+                            <div
+                                className={`w-3 h-3 rounded-full ${color}`}
+                            ></div>
+                            <span className="text-xs text-gray-400">
+                                {label}
+                            </span>
                         </div>
                     ))}
                 </div>
@@ -368,10 +504,18 @@ const Rodados = () => {
                                     Área
                                 </th>
                                 {DAYS.map((day, i) => (
-                                    <th key={day} className="px-2 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-700 min-w-[100px]">
+                                    <th
+                                        key={day}
+                                        className="px-2 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-700 min-w-[100px]"
+                                    >
                                         <div>{day}</div>
                                         <div className="text-indigo-400 font-normal normal-case">
-                                            {formatDate(new Date(weekStart.getTime() + i * 86400000))}
+                                            {formatDate(
+                                                new Date(
+                                                    weekStart.getTime() +
+                                                        i * 86400000,
+                                                ),
+                                            )}
                                         </div>
                                     </th>
                                 ))}
@@ -379,15 +523,33 @@ const Rodados = () => {
                         </thead>
                         <tbody>
                             {areas.map((area, areaIndex) => (
-                                <tr key={area} className={areaIndex % 2 === 0 ? "bg-gray-800" : "bg-gray-900"}>
+                                <tr
+                                    key={area}
+                                    className={
+                                        areaIndex % 2 === 0
+                                            ? "bg-gray-800"
+                                            : "bg-gray-900"
+                                    }
+                                >
                                     <td className="px-3 py-2 text-sm font-medium text-white border-r border-gray-700 whitespace-nowrap">
                                         {area}
                                     </td>
                                     {DAYS.map((_, dayIndex) => (
-                                        <td key={dayIndex} className="px-2 py-2 border-x border-gray-700/50">
+                                        <td
+                                            key={dayIndex}
+                                            className="px-2 py-2 border-x border-gray-700/50"
+                                        >
                                             <CeldaCalendario
-                                                pedidos={getPedidosParaCelda(area, dayIndex)}
-                                                onClick={() => handleCeldaClick(area, dayIndex)}
+                                                pedidos={getPedidosParaCelda(
+                                                    area,
+                                                    dayIndex,
+                                                )}
+                                                onClick={() =>
+                                                    handleCeldaClick(
+                                                        area,
+                                                        dayIndex,
+                                                    )
+                                                }
                                             />
                                         </td>
                                     ))}
@@ -405,7 +567,13 @@ const Rodados = () => {
                     area={modalData.area}
                     fecha={modalData.fecha}
                     onClose={() => setModalData(null)}
-                    userRole={user.role}
+                    userRole={
+                        user.role === "admin"
+                            ? "admin"
+                            : user.permissions?.find(
+                                  (p) => p.module === "rodados",
+                              )?.role
+                    }
                 />
             )}
         </>
