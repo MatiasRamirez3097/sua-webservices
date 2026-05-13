@@ -19,6 +19,8 @@ const AREAS = [
     "Despacho",
     "Paisajismo",
     "Inspeccion",
+    "Centralizacion",
+    "Procesamiento de datos",
     "Departamento Tecnico",
     "Centro de Informatica",
 ];
@@ -365,7 +367,10 @@ const Usuarios = () => {
                         render: (row) => (
                             <div className="flex flex-wrap gap-1 justify-center">
                                 {row.permissions?.length > 0 ? (
-                                    row.permissions.map((p) => {
+                                    row.permissions.map((p, i) => {
+                                        if (typeof p !== "object" || !p.module)
+                                            return null;
+
                                         const moduleLabel =
                                             MODULES.find(
                                                 (m) => m.value === p.module,
@@ -378,7 +383,7 @@ const Usuarios = () => {
 
                                         return (
                                             <span
-                                                key={`${p.module}-${p.role}`}
+                                                key={`${p.module}-${p.role}-${i}`}
                                                 className="px-2 py-0.5 bg-indigo-900 text-indigo-300 border border-indigo-700 rounded-full text-xs"
                                             >
                                                 {moduleLabel}: {roleLabel}
