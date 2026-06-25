@@ -515,7 +515,12 @@ const EstadoCargas = () => {
                                     columns={[
                                         { header: "SUA", key: "sua" },
                                         { header: "AÑO", key: "year" },
-                                        { header: "Estado", key: "status" },
+                                        {
+                                            header: "Estado",
+                                            key: "status",
+                                            render: (row) =>
+                                                "Resuelto con éxito",
+                                        },
                                     ]}
                                 />
                             </div>
