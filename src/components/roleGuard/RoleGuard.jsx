@@ -1,21 +1,23 @@
 import { useSelector } from "react-redux";
 
-/**
- * @param {Array} allowedRoles - Lista de roles permitidos ej: ['admin', 'gestor']
- * @param {ReactNode} children - El componente a mostrar si tiene permiso
- */
-const RoleGuard = ({ allowedRoles, children }) => {
+const RoleGuard = ({ module, allowedRoles, children }) => {
     const { user } = useSelector((store) => store.auth);
 
-    // 1. Si no hay usuario, no mostramos nada
-    if (!user || !user.role) return null;
+    if (!user) return null;
 
-    // 2. Si el rol del usuario está en la lista permitida, mostramos el contenido
-    if (allowedRoles.includes(user.role)) {
-        return children;
+    if (user.role === "admin") return children;
+
+    //  Si se pasa un module, busca el permiso correspondiente
+    if (module) {
+        const perm = user.permissions?.find((p) => p.module === module);
+        if (!perm) return null;
+
+        // Si no se especifican roles permitidos, con tener el permiso alcanza
+        if (!allowedRoles) return children;
+
+        return allowedRoles.includes(perm.role) ? children : null;
     }
 
-    // 3. Si no tiene permiso, no renderizamos nada (invisible)
     return null;
 };
 

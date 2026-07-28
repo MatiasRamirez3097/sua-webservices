@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import Layout from "./layout/Layout";
-import { EstadoCargas, Home, Resoluciones, Rodados, Usuarios } from "./pages";
+import { EstadoCargas, Home, GestionSua, Rodados, Usuarios } from "./pages";
 import { ProtectedRoute } from "./components";
 
 const router = createBrowserRouter([
@@ -16,30 +16,22 @@ const router = createBrowserRouter([
                 element: <Home />,
             },
             {
-                element: <ProtectedRoute allowedRoles={["admin", "manager"]} />,
+                element: <ProtectedRoute module="rodados" />,
+                children: [{ path: "/rodados", element: <Rodados /> }],
+            },
+            {
+                element: <ProtectedRoute module="estadocargas" />,
                 children: [
-                    {
-                        path: "/rodados",
-                        element: <Rodados />,
-                    },
-                    {
-                        path: "/estadocargas",
-                        element: <EstadoCargas />,
-                    },
-                    {
-                        path: "/resoluciones",
-                        element: <Resoluciones />,
-                    },
+                    { path: "/estadocargas", element: <EstadoCargas /> },
                 ],
             },
             {
-                element: <ProtectedRoute allowedRoles={["admin"]} />,
-                children: [
-                    {
-                        path: "/usuarios",
-                        element: <Usuarios />,
-                    },
-                ],
+                element: <ProtectedRoute module="gestionsua" />,
+                children: [{ path: "/gestionsua", element: <GestionSua /> }],
+            },
+            {
+                element: <ProtectedRoute adminOnly />,
+                children: [{ path: "/usuarios", element: <Usuarios /> }],
             },
         ],
     },

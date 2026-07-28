@@ -1,21 +1,32 @@
 import { useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
 
-const ProtectedRoute = ({ allowedRoles }) => {
+const ProtectedRoute = ({ module, allowedRoles, adminOnly }) => {
     const { user } = useSelector((store) => store.auth);
 
-    // Si no está logueado, al login
     if (!user || !Object.keys(user).length) {
         return <Navigate to="/" replace />;
     }
 
-    // Si tiene el rol correcto, dejamos pasar (Outlet renderiza la hija)
-    if (allowedRoles.includes(user.role)) {
+    // admin pasa todo
+    if (user.role === "admin") return <Outlet />;
+
+    // Solo admin puede acceder (ej: /usuarios)
+    if (adminOnly) return <Navigate to="/home" replace />;
+
+    // Verificar por módulo
+    if (module) {
+        const perm = user.permissions?.find((p) => p.module === module);
+        if (!perm) return <Navigate to="/home" replace />;
+
+        if (allowedRoles && !allowedRoles.includes(perm.role)) {
+            return <Navigate to="/home" replace />;
+        }
+
         return <Outlet />;
     }
 
-    // Si no tiene permiso, lo mandamos al inicio o a una página 403
-    return <Navigate to="/" replace />; // O a una pagina de "Sin Permisos"
+    return <Navigate to="/home" replace />;
 };
 
 export default ProtectedRoute;

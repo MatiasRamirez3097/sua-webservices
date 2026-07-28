@@ -1,4 +1,3 @@
-import Div from "../div/Div";
 import Label from "../label/Label";
 
 const CsvProcessor = ({
@@ -12,100 +11,97 @@ const CsvProcessor = ({
     status,
     headers,
     rowStatus,
+    fileInputId = "file-upload", // ✅ prop nuevo con valor por defecto
 }) => {
-    // Función auxiliar para colores
-    const getRowStyle = (index) => {
-        // Verificamos si rowStatus existe para evitar errores si es undefined
-        if (!rowStatus) return {};
-
-        const state = rowStatus[index];
-        if (state === "success") return { backgroundColor: "#d4edda" };
-        if (state === "error") return { backgroundColor: "#f8d7da" };
-
-        return {};
-    };
-
     return (
-        // Contenedor principal
-        <Div>
-            {/* Título principal */}
-            <Label label="Procesador de CSV" />
-
-            {/* Sección para subir archivo */}
+        <div className="space-y-6">
+            {/* Zona de carga */}
             <div className="flex flex-col items-center gap-4">
-                {/* LABEL COMO BOTÓN PARA SUBIR ARCHIVO */}
                 <label
-                    htmlFor="file-upload"
-                    className="bg-indigo-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-indigo-600 transition"
+                    htmlFor={fileInputId} // ✅ usa el prop
+                    className="w-full h-32 flex flex-col items-center justify-center
+                               bg-gray-700/50 border-2 border-dashed border-indigo-500/50
+                               rounded-xl cursor-pointer hover:bg-gray-700 hover:border-indigo-400 transition-all"
                 >
-                    Seleccionar archivo
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-7 w-7 text-indigo-400 mb-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                        />
+                    </svg>
+                    <p className="text-white font-medium text-sm">
+                        {file
+                            ? file.name
+                            : "Hacer clic para seleccionar archivo CSV"}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                        Solo archivos .csv
+                    </p>
                 </label>
 
-                {/* INPUT REAL OCULTO */}
                 <input
-                    id="file-upload"
+                    id={fileInputId} // ✅ usa el prop
                     type="file"
                     accept=".csv"
                     onChange={handleFileChange}
                     className="hidden"
                 />
 
-                {/* NOMBRE DEL ARCHIVO */}
-                <p className="text-sm text-gray-300 italic">
-                    {file ? file.name : "Ningún archivo seleccionado"}
-                </p>
-
-                {/* GRUPO DE BOTONES EN FILA */}
-                <div className="flex gap-4">
-                    {/* BOTÓN: CARGAR Y MOSTRAR CSV */}
+                <div className="flex gap-3">
                     <button
                         onClick={handleParse}
                         disabled={!file}
-                        className={`px-6 py-2 rounded-md text-white font-medium transition-colors duration-200 
-							${
+                        className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all
+                            ${
                                 file
-                                    ? "bg-indigo-900 hover:bg-indigo-700 cursor-pointer"
-                                    : "bg-gray-700 cursor-not-allowed"
+                                    ? "bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"
+                                    : "bg-gray-700 text-gray-500 cursor-not-allowed"
                             }`}
                     >
-                        Cargar y Mostrar CSV
+                        Cargar y mostrar CSV
                     </button>
 
-                    {/*BOTON PROCESAR FILAS EN API*/}
                     <button
                         onClick={handleProcessAPI}
                         disabled={jsonData.length === 0}
-                        className={`px-6 py-2 rounded-md font-medium transition-colors duration-200
-							${
+                        className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all
+                            ${
                                 jsonData.length > 0
-                                    ? "bg-indigo-900 hover:bg-indigo-700 cursor-pointer"
-                                    : "bg-gray-700 cursor-not-allowed"
+                                    ? "bg-green-600 hover:bg-green-500 text-white cursor-pointer"
+                                    : "bg-gray-700 text-gray-500 cursor-not-allowed"
                             }`}
                     >
                         Procesar {jsonData.length} filas
                     </button>
                 </div>
             </div>
-            {/* Mostrar botón solo si hay errores en el array */}
+
+            {/* Errores */}
             {errores && errores.length > 0 && (
-                <div className="mt-4 p-4 bg-indigo-200 border border-black rounded-lg flex items-center justify-between">
-                    <div className="text-red-700">
-                        <p className="font-bold text-left">
+                <div className="p-4 bg-red-900/30 border border-red-700 rounded-xl flex items-center justify-between">
+                    <div>
+                        <p className="font-semibold text-red-400">
                             ⚠️ Se encontraron {errores.length} errores
                         </p>
-                        <p className="text-sm">
-                            Descarga el reporte para revisarlos manualmente.
+                        <p className="text-sm text-gray-400 mt-1">
+                            Descargá el reporte para revisarlos manualmente.
                         </p>
                     </div>
-
                     <button
                         onClick={handleDescargarErrores}
-                        className="px-4 py-2 bg-red-600 text-white border border-black font-semibold rounded hover:bg-red-700 transition shadow-sm flex items-center gap-2"
+                        className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold rounded-lg transition flex items-center gap-2"
                     >
-                        {/* Icono de descarga opcional */}
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
+                            className="h-4 w-4"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -117,43 +113,41 @@ const CsvProcessor = ({
                                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                             />
                         </svg>
-                        Descargar CSV Errores
+                        Descargar errores
                     </button>
                 </div>
             )}
 
+            {/* Tabla CSV */}
             {jsonData.length > 0 && (
-                <div className="mt-6">
-                    <h3 className="text-lg font-semibold mb-3 text-white">
-                        Datos del CSV
+                <div>
+                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                        Vista previa — {jsonData.length} registros
                     </h3>
-
-                    <div className="overflow-x-auto overflow-y-auto max-h-80 rounded-lg shadow border border-black">
-                        <table className="w-full border text-center border-gray-300 border-collapse rounded-lg overflow-hidden">
-                            <thead className="bg-gray-400 text-black">
+                    <div className="overflow-auto max-h-80 rounded-xl border border-gray-700">
+                        <table className="min-w-full text-center border-collapse text-white">
+                            <thead className="bg-gray-700 text-gray-300 sticky top-0 z-10">
                                 <tr>
                                     {headers.map((header) => (
                                         <th
                                             key={header}
-                                            className="px-4 py-2 text-center font-bold border border-black-400"
+                                            className="px-3 py-3 text-xs font-semibold uppercase tracking-wider border-x border-gray-600 whitespace-nowrap"
                                         >
                                             {header}
                                         </th>
                                     ))}
                                 </tr>
                             </thead>
-
-                            {/* Filas del cuerpo: colores alternados (blanco / gris claro) */}
-                            <tbody className="text-white">
+                            <tbody>
                                 {jsonData.map((row, index) => (
                                     <tr
                                         key={index}
-                                        className="even:bg-gray-800 odd:bg-gray-900"
+                                        className={`${index % 2 === 0 ? "bg-gray-800" : "bg-gray-900"} hover:bg-gray-700 transition-colors`}
                                     >
                                         {headers.map((header) => (
                                             <td
                                                 key={`${index}-${header}`}
-                                                className="px-4 py-2 border border-gray-700"
+                                                className="px-3 py-2 border-x border-gray-700 text-sm whitespace-nowrap"
                                             >
                                                 {row[header]}
                                             </td>
@@ -165,7 +159,7 @@ const CsvProcessor = ({
                     </div>
                 </div>
             )}
-        </Div>
+        </div>
     );
 };
 

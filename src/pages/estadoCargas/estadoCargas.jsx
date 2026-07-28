@@ -1,18 +1,27 @@
 import { useEffect, useState } from "react";
-import { Button, Div, Input, Label, Modal, Table } from "../../components";
+import { Button, Div, Modal, Table, H2 } from "../../components";
 import { useDispatch, useSelector } from "react-redux";
-import { getBatches, getOneBatch } from "../../redux/slices/sua/batchSlice.js";
+import {
+    getBatches,
+    getOneBatch,
+    rescheduleBatch,
+    deleteOneBatch,
+    cancelBatch,
+    setNewExecutionDate,
+} from "../../redux/slices/sua/batchSlice.js";
 import createCSV from "../../utils/createCSV";
+import { sweetAlert } from "../../components/alerts/SweetAlert";
+import basuraIcon from "../../assets/icons/basura_icon.svg";
+import calendarioIcon from "../../assets/icons/calendario_icon.svg";
+import cancelarIcon from "../../assets/icons/cancelar_icon.svg";
+import confirmacionIcon from "../../assets/icons/confirmacion_icon.svg";
+import exclamacionIcon from "../../assets/icons/exclamacion_icon.svg";
 
 const EstadoCargas = () => {
     const dispatch = useDispatch();
-    const [modal, setModal] = useState({
-        status: false,
-        type: null,
-    });
-    const [idSelected, setIdSelected] = useState(null);
-    const { batch, list, newFechaEjecucion } = useSelector(
-        (store) => store.batches
+
+    const { batch, list, newExecutionDate } = useSelector(
+        (store) => store.batches,
     );
 
     useEffect(() => {
@@ -21,8 +30,9 @@ const EstadoCargas = () => {
 
     useEffect(() => {
         const checkActiveProccess = list.some(
-            (b) => b.status === "PROCESSING" || b.status === "PENDING"
+            (b) => b.status === "PROCESSING" || b.status === "PENDING",
         );
+
         if (checkActiveProccess) {
             const intervalId = setInterval(() => {
                 dispatch(getBatches());
@@ -32,6 +42,11 @@ const EstadoCargas = () => {
         }
     }, [list, dispatch]);
 
+    const [modal, setModal] = useState({
+        status: false,
+        type: null,
+    });
+
     const getErrors = async (id) => {
         await dispatch(
             getOneBatch({
@@ -39,7 +54,7 @@ const EstadoCargas = () => {
                 onlyErrors: true,
                 fields: "date",
                 itemsFields: "sua,year,errorDetail",
-            })
+            }),
         );
         setModal({
             status: true,
@@ -48,153 +63,273 @@ const EstadoCargas = () => {
     };
 
     const downloadErrors = (errors) => {
-        // 3. Crear link de descarga temporal
         const link = document.createElement("a");
         const url = URL.createObjectURL(createCSV(errors));
         link.setAttribute("href", url);
         link.setAttribute("download", "reporte_errores.csv");
         link.style.visibility = "hidden";
 
-        // 4. Simular click y limpiar
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     };
 
-    const isEditable = (batch) => {
-        if (batch.status !== "PENDING") return false;
+    const getResults = async (id) => {
+        await dispatch(
+            getOneBatch({
+                id: id,
+                onlyErrors: false,
+                fields: "date",
+                itemsFields: "sua,year,status",
+            }),
+        );
 
-        if (!batch.scheduledFor) return false;
+        setModal({
+            status: true,
+            type: "results",
+        });
+    };
+
+    const canCancel = (batch) => {
+        if (batch.status !== "PENDING") return false;
+        if (!batch.scheduledAt) return false;
 
         const now = new Date();
-        const scheduledTime = new Date(batch.scheduledFor);
+        const scheduledTime = new Date(batch.scheduledAt);
         const diff = scheduledTime - now;
-        const ONE_HOUR = 60 * 60 * 1000;
 
-        return diff > ONE_HOUR;
+        const FIFTEEN_MIN = 15 * 60 * 1000;
+
+        return diff > FIFTEEN_MIN;
     };
 
-    const handleDelete = (id) => {
-        setIdSelected(id);
-        setModal({
-            status: true,
-            type: "delete",
+    const sendDelete = async (id) => {
+        const confirm = await sweetAlert.fire({
+            type: "question",
+            title: "¿Eliminar lote?",
+            message: "Esta acción no se puede deshacer.",
+            showCancelButton: true,
+            confirmButtonText: "Eliminar",
+            cancelButtonText: "Cancelar",
         });
+
+        if (!confirm.isConfirmed) return;
+
+        try {
+            await dispatch(deleteOneBatch(id)).unwrap();
+
+            dispatch(getBatches());
+
+            sweetAlert.fire({
+                type: "success",
+                title: "Eliminado",
+                message: "El lote fue eliminado correctamente.",
+            });
+        } catch (error) {
+            sweetAlert.fire({
+                type: "error",
+                title: "Error",
+                message: error || "No se pudo eliminar el lote.",
+            });
+        }
     };
 
-    const sendDelete = async () => {
-        await dispatch(deleteOneBatch(idSelected));
-        await dispatch(getBatches());
-        setModal({
-            status: false,
-            type: null,
+    const handleReschedule = async (id) => {
+        const { value: newDate } = await sweetAlert.fire({
+            type: "question",
+            title: "Nueva fecha de ejecución",
+            message: "Ingrese la nueva fecha de ejecución",
+            input: "datetime-local",
+            inputLabel: "Seleccionar fecha",
+            showCancelButton: true,
+            confirmButtonText: "Reprogramar",
+            cancelButtonText: "Cancelar",
         });
+
+        if (!newDate) return;
+
+        try {
+            await dispatch(
+                rescheduleBatch({
+                    id,
+                    newDate,
+                }),
+            ).unwrap();
+
+            dispatch(getBatches());
+
+            sweetAlert.fire({
+                type: "success",
+                title: "Reprogramado",
+                message: "El lote fue reprogramado a una nueva fecha.",
+            });
+        } catch (error) {
+            sweetAlert.fire({
+                type: "error",
+                title: "Error",
+                message: error || "No se pudo reprogramar.",
+            });
+        }
     };
 
-    const handleScheduledEdit = (id) => {
-        setIdSelected(id);
-        setModal({
-            status: true,
-            type: "reschedule",
+    const handleCancel = async (id) => {
+        const confirm = await sweetAlert.fire({
+            type: "question",
+            title: "¿Cancelar lote cargado?",
+            message: "El lote cargado pasará a estado cancelado.",
+            showCancelButton: true,
+            confirmButtonText: "Cancelar",
+            cancelButtonText: "Volver",
         });
+
+        if (!confirm.isConfirmed) return;
+
+        try {
+            await dispatch(cancelBatch(id)).unwrap();
+
+            dispatch(getBatches());
+
+            sweetAlert.fire({
+                type: "success",
+                title: "Carga cancelada",
+                message: "El lote fue cancelado correctamente.",
+            });
+        } catch (error) {
+            sweetAlert.fire({
+                type: "error",
+                title: "Error",
+                message: error || "No se pudo cancelar.",
+            });
+        }
     };
 
-    const onChange = (e) => {
-        if (e.target.name == "newFechaEjecucion")
-            dispatch(newFechaEjecucionAction(e.target.value));
-    };
+    const downloadResults = (results) => {
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(createCSV(results));
+        link.setAttribute("href", url);
+        link.setAttribute("download", "reporte_resultados.csv");
+        link.style.visibility = "hidden";
 
-    const sendScheduledChange = async () => {
-        await dispatch(
-            rescheduleBatch({
-                id: idSelected,
-                newDate: newFechaEjecucion,
-            })
-        );
-        setModal({
-            status: false,
-            type: null,
-        });
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     return (
-        <Div className="w-full max-w-8xl mx-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8">
+        <div className="w-full px-2 mb-8">
+            {/* HEADER */}
+            <div className="mb-6 pb-4 border-b border-gray-700">
+                <h1 className="text-2xl font-bold text-white tracking-widest uppercase">
+                    Estado de Cargas
+                </h1>
+                <p className="text-gray-400 text-sm mt-1">
+                    Monitoreo de lotes procesados
+                </p>
+            </div>
+
             <Table
                 data={list}
                 columns={[
+                    { header: "Fecha", key: "date" },
                     {
-                        header: "Fecha",
-                        key: "date",
-                    },
-                    {
-                        header: "Tipo",
-                        key: "processType",
-                    },
-                    {
-                        header: "Usuario",
+                        header: "Fecha ejecución",
                         render: (row) => {
-                            if (!row.user)
+                            if (
+                                !row.scheduledAt ||
+                                row.scheduledAt.startsWith("1970")
+                            ) {
                                 return (
                                     <span className="text-gray-500">
-                                        Desconocido
+                                        Sin programar
                                     </span>
                                 );
+                            }
+                            const date = new Date(row.scheduledAt);
                             return (
+                                <span>
+                                    {date.toLocaleString("es-AR", {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                    })}
+                                </span>
+                            );
+                        },
+                    },
+                    { header: "Tipo", key: "processType" },
+                    {
+                        header: "Usuario",
+                        render: (row) =>
+                            !row.user ? (
+                                <span className="text-gray-500">
+                                    Desconocido
+                                </span>
+                            ) : (
                                 <span className="font-medium text-white">
                                     {row.user.name} {row.user.surname}
+                                </span>
+                            ),
+                    },
+                    { header: "Solicitudes", key: "totalRecords" },
+                    { header: "Procesados", key: "processed" },
+                    { header: "Errores", key: "errorsCount" },
+                    {
+                        header: "Estado",
+                        render: (row) => {
+                            const styles = {
+                                COMPLETED:
+                                    "bg-green-900 text-green-300 border border-green-700",
+                                PROCESSING:
+                                    "bg-blue-900 text-blue-300 border border-blue-700",
+                                PENDING:
+                                    "bg-yellow-900 text-yellow-300 border border-yellow-700",
+                                CANCELED:
+                                    "bg-gray-700 text-gray-300 border border-gray-500",
+                                ERROR: "bg-red-900 text-red-300 border border-red-700",
+                            };
+                            const labels = {
+                                COMPLETED: "Completado",
+                                PROCESSING: "Procesando",
+                                PENDING: "Pendiente",
+                                CANCELED: "Cancelado",
+                                ERROR: "Error",
+                            };
+                            return (
+                                <span
+                                    className={`px-2 py-1 rounded-full text-xs font-semibold ${styles[row.status] || "bg-gray-700 text-gray-300"}`}
+                                >
+                                    {labels[row.status] || row.status}
                                 </span>
                             );
                         },
                     },
                     {
-                        header: "Solicitudes",
-                        key: "totalRecords",
-                    },
-                    {
-                        header: "Procesados",
-                        key: "processed",
-                    },
-                    {
-                        header: "Errores",
-                        key: "errorsCount",
-                    },
-                    {
-                        header: "Estado",
-                        key: "status",
-                    },
-                    {
                         header: "Progreso",
                         render: (row) => {
-                            // Evitamos división por cero
                             const total = row.totalRecords || 1;
                             const processed = row.processed || 0;
                             const percentage = Math.round(
-                                (processed / total) * 100
+                                (processed / total) * 100,
                             );
-
-                            // Color dinámico de la barra
                             let barColor = "bg-blue-600";
                             if (row.status === "ERROR") barColor = "bg-red-500";
                             if (row.status === "COMPLETED")
                                 barColor = "bg-green-500";
-
                             return (
                                 <div className="w-32">
-                                    {" "}
-                                    {/* Ancho fijo para la barra */}
                                     <div className="flex justify-between text-xs mb-1">
                                         <span>{percentage}%</span>
                                         <span className="text-gray-400">
                                             {processed}/{total}
                                         </span>
                                     </div>
-                                    {/* Contenedor de la barra (fondo gris) */}
                                     <div className="w-full bg-gray-700 rounded-full h-2.5 overflow-hidden">
-                                        {/* La barra de relleno (animada) */}
                                         <div
-                                            className={`${barColor} h-2.5 rounded-full transition-all duration-500 ease-out`}
+                                            className={`${barColor} h-2.5 rounded-full transition-all duration-500`}
                                             style={{ width: `${percentage}%` }}
-                                        ></div>
+                                        />
                                     </div>
                                     {row.status === "PROCESSING" && (
                                         <span className="text-[10px] text-blue-400 animate-pulse">
@@ -208,163 +343,295 @@ const EstadoCargas = () => {
                     {
                         header: "Acciones",
                         render: (row) => (
-                            <div className="flex justify-center items-center gap-3">
-                                {row.status === "PENDING" && isEditable && (
-                                    <Button
-                                        className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
-                                        text="Cambiar fecha ejecucion"
-                                        onClick={() =>
-                                            handleScheduledEdit(row._id)
-                                        }
-                                    />
+                            <div className="flex items-center gap-3">
+                                {row.status === "PENDING" && canCancel(row) && (
+                                    <div className="relative group">
+                                        <button
+                                            onClick={() =>
+                                                handleCancel(row._id)
+                                            }
+                                            className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-xl"
+                                        >
+                                            <img
+                                                src={basuraIcon}
+                                                className="w-5 h-5"
+                                            />
+                                        </button>
+                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                            Cancelar
+                                        </span>
+                                    </div>
                                 )}
-                                {row.status === "COMPLETED" &&
-                                row.errorsCount > 0 ? (
-                                    <Button
-                                        className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
-                                        text="Ver errores"
-                                        onClick={() => getErrors(row._id)}
-                                    />
-                                ) : (
-                                    <Button
-                                        className="bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
-                                        text="Ver Resultados"
-                                    ></Button>
+                                {row.status === "CANCELED" && (
+                                    <>
+                                        <div className="relative group">
+                                            <button
+                                                onClick={() =>
+                                                    handleReschedule(row._id)
+                                                }
+                                                className="bg-yellow-500 hover:bg-yellow-600 p-2 rounded-xl"
+                                            >
+                                                <img
+                                                    src={calendarioIcon}
+                                                    className="w-5 h-5"
+                                                />
+                                            </button>
+                                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                                Cambiar fecha
+                                            </span>
+                                        </div>
+                                        <div className="relative group">
+                                            <button
+                                                onClick={() =>
+                                                    sendDelete(row._id)
+                                                }
+                                                className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-xl"
+                                            >
+                                                <img
+                                                    src={basuraIcon}
+                                                    className="w-5 h-5"
+                                                />
+                                            </button>
+                                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                                Eliminar
+                                            </span>
+                                        </div>
+                                    </>
                                 )}
-                                {row.errorsCount === row.totalRecords && (
-                                    <Button
-                                        className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl px-4 py-2 h-20 flex items-center justify-center text-center leading-tight"
-                                        text="Eliminar"
-                                        onClick={() => handleDelete(row._id)}
-                                    />
+                                {row.status === "COMPLETED" && (
+                                    <>
+                                        {row.processed > row.errorsCount && (
+                                            <div className="relative group">
+                                                <button
+                                                    onClick={() =>
+                                                        getResults(row._id)
+                                                    }
+                                                    className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-xl"
+                                                >
+                                                    <img
+                                                        src={confirmacionIcon}
+                                                        className="w-5 h-5"
+                                                    />
+                                                </button>
+                                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                                    Ver resultados
+                                                </span>
+                                            </div>
+                                        )}
+                                        {row.errorsCount > 0 && (
+                                            <div className="relative group">
+                                                <button
+                                                    onClick={() =>
+                                                        getErrors(row._id)
+                                                    }
+                                                    className="bg-yellow-600 hover:bg-yellow-700 text-white p-2 rounded-xl"
+                                                >
+                                                    <img
+                                                        src={exclamacionIcon}
+                                                        className="w-5 h-5"
+                                                    />
+                                                </button>
+                                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                                    Ver errores
+                                                </span>
+                                            </div>
+                                        )}
+                                        <div className="relative group">
+                                            <button
+                                                onClick={() =>
+                                                    sendDelete(row._id)
+                                                }
+                                                className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-xl"
+                                            >
+                                                <img
+                                                    src={basuraIcon}
+                                                    className="w-5 h-5"
+                                                />
+                                            </button>
+                                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                                Eliminar
+                                            </span>
+                                        </div>
+                                    </>
                                 )}
                             </div>
                         ),
                     },
                 ]}
             />
+
             {modal.status && (
-                <Modal>
-                    {modal.type === "errors" &&
-                        Object.keys(batch).length > 0 && (
-                            <Div>
-                                <table className="w-full border-collapse border border-gray-700 text-white my-4">
-                                    <thead className="bg-gray-700 text-center">
-                                        <tr>
-                                            <th className="border border-gray-600 px-3 py-2">
-                                                FECHA
-                                            </th>
-                                            <th className="border border-gray-600 px-3 py-2">
-                                                Tipo
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr className="bg-gray-800">
-                                            <td className="border border-gray-700 text-center px-3 py-2">
-                                                {batch.date}
-                                            </td>
-                                            <td className="border border-gray-700 text-center px-3 py-2">
-                                                {batch.processType}
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <Table
-                                    data={batch.items}
-                                    columns={[
-                                        {
-                                            header: "SUA",
-                                            key: "sua",
-                                        },
-                                        {
-                                            header: "AÑO",
-                                            key: "year",
-                                        },
-                                        {
-                                            header: "Error",
-                                            key: "errorDetail",
-                                        },
-                                    ]}
-                                />
-                                <div className="flex justify-center items-center gap-4 mt-4">
-                                    <Button
-                                        text="OK"
+                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+                    <div className="bg-gray-900 w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl border border-gray-700 shadow-2xl overflow-hidden">
+                        {/* ── ERRORES ── */}
+                        {modal.type === "errors" && (
+                            <>
+                                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+                                    <div>
+                                        <h2 className="text-white font-bold text-lg">
+                                            Errores del lote
+                                        </h2>
+                                        <p className="text-gray-400 text-xs mt-0.5">
+                                            {batch.items?.length || 0} registros
+                                            con error
+                                        </p>
+                                    </div>
+                                    <button
                                         onClick={() =>
                                             setModal({
                                                 status: false,
                                                 type: null,
                                             })
                                         }
-                                        className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg px-4 py-2 flex items-center justify-center"
-                                    />
+                                        className="text-gray-500 hover:text-white text-xl transition-colors"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
 
-                                    <Button
-                                        text="Descargar errores"
+                                <div className="flex-1 overflow-auto px-4 py-4">
+                                    <Table
+                                        data={batch.items}
+                                        columns={[
+                                            { header: "SUA", key: "sua" },
+                                            { header: "Año", key: "year" },
+                                            {
+                                                header: "Detalle del error",
+                                                key: "errorDetail",
+                                            },
+                                        ]}
+                                    />
+                                </div>
+
+                                <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-700">
+                                    <button
                                         onClick={() =>
                                             downloadErrors(batch.items)
                                         }
-                                        className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg px-4 py-2 flex items-center justify-center whitespace-nowrap"
+                                        className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all"
+                                    >
+                                        <svg
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                        >
+                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                                            <polyline points="7 10 12 15 17 10" />
+                                            <line
+                                                x1="12"
+                                                y1="15"
+                                                x2="12"
+                                                y2="3"
+                                            />
+                                        </svg>
+                                        Descargar errores
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            setModal({
+                                                status: false,
+                                                type: null,
+                                            })
+                                        }
+                                        className="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all"
+                                    >
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </>
+                        )}
+
+                        {/* ── RESULTADOS ── */}
+                        {modal.type === "results" && (
+                            <>
+                                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+                                    <div>
+                                        <h2 className="text-white font-bold text-lg">
+                                            Resultados exitosos
+                                        </h2>
+                                        <p className="text-gray-400 text-xs mt-0.5">
+                                            {batch.items?.length || 0} registros
+                                            procesados correctamente
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() =>
+                                            setModal({
+                                                status: false,
+                                                type: null,
+                                            })
+                                        }
+                                        className="text-gray-500 hover:text-white text-xl transition-colors"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+
+                                <div className="flex-1 overflow-auto px-4 py-4">
+                                    <Table
+                                        data={batch.items}
+                                        columns={[
+                                            { header: "SUA", key: "sua" },
+                                            { header: "Año", key: "year" },
+                                            {
+                                                header: "Estado",
+                                                render: () => (
+                                                    <span className="px-2 py-0.5 bg-green-900 text-green-300 border border-green-700 rounded-full text-xs font-semibold">
+                                                        Resuelto con éxito
+                                                    </span>
+                                                ),
+                                            },
+                                        ]}
                                     />
                                 </div>
-                            </Div>
+
+                                <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-700">
+                                    <button
+                                        onClick={() =>
+                                            downloadResults(batch.items)
+                                        }
+                                        className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all"
+                                    >
+                                        <svg
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                        >
+                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                                            <polyline points="7 10 12 15 17 10" />
+                                            <line
+                                                x1="12"
+                                                y1="15"
+                                                x2="12"
+                                                y2="3"
+                                            />
+                                        </svg>
+                                        Descargar resultados
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            setModal({
+                                                status: false,
+                                                type: null,
+                                            })
+                                        }
+                                        className="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all"
+                                    >
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </>
                         )}
-                    {modal.type === "reschedule" && (
-                        <div className="flex-1">
-                            <Label label="Fecha y hora ejecucion" />
-                            <Input
-                                value={newFechaEjecucion}
-                                name="newFechaEjecucion"
-                                onChange={(e) => onChange(e)}
-                                type="datetime-local"
-                                step="1"
-                            />
-                            <div className="flex justify-center items-center gap-4 mt-4">
-                                <Button
-                                    text="OK"
-                                    onClick={() => sendScheduledChange()}
-                                    className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg px-4 py-2 flex items-center justify-center"
-                                />
-
-                                <Button
-                                    text="Cancelar"
-                                    onClick={() =>
-                                        setModal({
-                                            status: false,
-                                            type: null,
-                                        })
-                                    }
-                                    className="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg px-4 py-2 flex items-center justify-center whitespace-nowrap"
-                                />
-                            </div>
-                        </div>
-                    )}
-                    {modal.type === "delete" && (
-                        <div className="flex-1">
-                            <Label label="Esta seguro que desea Eliminar?" />
-                            <div className="flex justify-center items-center gap-4 mt-4">
-                                <Button
-                                    text="OK"
-                                    onClick={() => sendDelete()}
-                                    className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg px-4 py-2 flex items-center justify-center"
-                                />
-
-                                <Button
-                                    text="Cancelar"
-                                    onClick={() =>
-                                        setModal({
-                                            status: false,
-                                            type: null,
-                                        })
-                                    }
-                                    className="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg px-4 py-2 flex items-center justify-center whitespace-nowrap"
-                                />
-                            </div>
-                        </div>
-                    )}
-                </Modal>
+                    </div>
+                </div>
             )}
-        </Div>
+        </div>
     );
 };
 
