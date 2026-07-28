@@ -216,12 +216,12 @@ const EstadoCargas = () => {
     };
 
     return (
-        <Div className="w-full max-w-8xl mx-auto border border-gray-300 p-6 bg-gray-800 rounded-xl mb-8">
-            <div className="mb-6 border-b border-gray-700 pb-4">
-                <H2
-                    className="text-2xl font-bold text-white tracking-widest uppercase"
-                    label="Estado de Cargas"
-                />
+        <div className="w-full px-2 mb-8">
+            {/* HEADER */}
+            <div className="mb-6 pb-4 border-b border-gray-700">
+                <h1 className="text-2xl font-bold text-white tracking-widest uppercase">
+                    Estado de Cargas
+                </h1>
                 <p className="text-gray-400 text-sm mt-1">
                     Monitoreo de lotes procesados
                 </p>
@@ -244,35 +244,33 @@ const EstadoCargas = () => {
                                     </span>
                                 );
                             }
-
                             const date = new Date(row.scheduledAt);
-                            const formatted = date.toLocaleString("es-AR", {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            });
-
-                            return <span>{formatted}</span>;
+                            return (
+                                <span>
+                                    {date.toLocaleString("es-AR", {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                    })}
+                                </span>
+                            );
                         },
                     },
                     { header: "Tipo", key: "processType" },
                     {
                         header: "Usuario",
-                        render: (row) => {
-                            if (!row.user)
-                                return (
-                                    <span className="text-gray-500">
-                                        Desconocido
-                                    </span>
-                                );
-                            return (
+                        render: (row) =>
+                            !row.user ? (
+                                <span className="text-gray-500">
+                                    Desconocido
+                                </span>
+                            ) : (
                                 <span className="font-medium text-white">
                                     {row.user.name} {row.user.surname}
                                 </span>
-                            );
-                        },
+                            ),
                     },
                     { header: "Solicitudes", key: "totalRecords" },
                     { header: "Procesados", key: "processed" },
@@ -315,12 +313,10 @@ const EstadoCargas = () => {
                             const percentage = Math.round(
                                 (processed / total) * 100,
                             );
-
                             let barColor = "bg-blue-600";
                             if (row.status === "ERROR") barColor = "bg-red-500";
                             if (row.status === "COMPLETED")
                                 barColor = "bg-green-500";
-
                             return (
                                 <div className="w-32">
                                     <div className="flex justify-between text-xs mb-1">
@@ -329,14 +325,12 @@ const EstadoCargas = () => {
                                             {processed}/{total}
                                         </span>
                                     </div>
-
                                     <div className="w-full bg-gray-700 rounded-full h-2.5 overflow-hidden">
                                         <div
                                             className={`${barColor} h-2.5 rounded-full transition-all duration-500`}
                                             style={{ width: `${percentage}%` }}
-                                        ></div>
+                                        />
                                     </div>
-
                                     {row.status === "PROCESSING" && (
                                         <span className="text-[10px] text-blue-400 animate-pulse">
                                             Procesando...
@@ -368,7 +362,6 @@ const EstadoCargas = () => {
                                         </span>
                                     </div>
                                 )}
-
                                 {row.status === "CANCELED" && (
                                     <>
                                         <div className="relative group">
@@ -387,7 +380,6 @@ const EstadoCargas = () => {
                                                 Cambiar fecha
                                             </span>
                                         </div>
-
                                         <div className="relative group">
                                             <button
                                                 onClick={() =>
@@ -406,7 +398,6 @@ const EstadoCargas = () => {
                                         </div>
                                     </>
                                 )}
-
                                 {row.status === "COMPLETED" && (
                                     <>
                                         {row.processed > row.errorsCount && (
@@ -427,7 +418,6 @@ const EstadoCargas = () => {
                                                 </span>
                                             </div>
                                         )}
-
                                         {row.errorsCount > 0 && (
                                             <div className="relative group">
                                                 <button
@@ -446,7 +436,6 @@ const EstadoCargas = () => {
                                                 </span>
                                             </div>
                                         )}
-
                                         <div className="relative group">
                                             <button
                                                 onClick={() =>
@@ -472,79 +461,177 @@ const EstadoCargas = () => {
             />
 
             {modal.status && (
-                <Modal>
-                    {modal.type === "errors" && (
-                        <Div>
-                            <H2 label="Errores" />
-                            <div className="max-h-96 overflow-y-auto rounded-lg">
-                                <Table
-                                    data={batch.items}
-                                    columns={[
-                                        { header: "SUA", key: "sua" },
-                                        { header: "AÑO", key: "year" },
-                                        { header: "Error", key: "errorDetail" },
-                                    ]}
-                                />
-                            </div>
+                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+                    <div className="bg-gray-900 w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl border border-gray-700 shadow-2xl overflow-hidden">
+                        {/* ── ERRORES ── */}
+                        {modal.type === "errors" && (
+                            <>
+                                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+                                    <div>
+                                        <h2 className="text-white font-bold text-lg">
+                                            Errores del lote
+                                        </h2>
+                                        <p className="text-gray-400 text-xs mt-0.5">
+                                            {batch.items?.length || 0} registros
+                                            con error
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() =>
+                                            setModal({
+                                                status: false,
+                                                type: null,
+                                            })
+                                        }
+                                        className="text-gray-500 hover:text-white text-xl transition-colors"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
 
-                            <div className="flex justify-center gap-5 mt-4">
-                                <Button
-                                    text="Descargar errores"
-                                    onClick={() => downloadErrors(batch.items)}
-                                    className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg px-4 py-2 flex items-center justify-center whitespace-nowrap"
-                                />
+                                <div className="flex-1 overflow-auto px-4 py-4">
+                                    <Table
+                                        data={batch.items}
+                                        columns={[
+                                            { header: "SUA", key: "sua" },
+                                            { header: "Año", key: "year" },
+                                            {
+                                                header: "Detalle del error",
+                                                key: "errorDetail",
+                                            },
+                                        ]}
+                                    />
+                                </div>
 
-                                <Button
-                                    className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl px-4 py-2 flex items-center justify-center text-center"
-                                    text="Cerrar"
-                                    onClick={() =>
-                                        setModal({ status: false, type: null })
-                                    }
-                                />
-                            </div>
-                        </Div>
-                    )}
+                                <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-700">
+                                    <button
+                                        onClick={() =>
+                                            downloadErrors(batch.items)
+                                        }
+                                        className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all"
+                                    >
+                                        <svg
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                        >
+                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                                            <polyline points="7 10 12 15 17 10" />
+                                            <line
+                                                x1="12"
+                                                y1="15"
+                                                x2="12"
+                                                y2="3"
+                                            />
+                                        </svg>
+                                        Descargar errores
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            setModal({
+                                                status: false,
+                                                type: null,
+                                            })
+                                        }
+                                        className="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all"
+                                    >
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </>
+                        )}
 
-                    {modal.type === "results" && (
-                        <Div>
-                            <H2 label="Resultados exitosos" />
+                        {/* ── RESULTADOS ── */}
+                        {modal.type === "results" && (
+                            <>
+                                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+                                    <div>
+                                        <h2 className="text-white font-bold text-lg">
+                                            Resultados exitosos
+                                        </h2>
+                                        <p className="text-gray-400 text-xs mt-0.5">
+                                            {batch.items?.length || 0} registros
+                                            procesados correctamente
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() =>
+                                            setModal({
+                                                status: false,
+                                                type: null,
+                                            })
+                                        }
+                                        className="text-gray-500 hover:text-white text-xl transition-colors"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
 
-                            <div className="max-h-96 overflow-y-auto rounded-lg">
-                                <Table
-                                    data={batch.items}
-                                    columns={[
-                                        { header: "SUA", key: "sua" },
-                                        { header: "AÑO", key: "year" },
-                                        {
-                                            header: "Estado",
-                                            key: "status",
-                                            render: (row) =>
-                                                "Resuelto con éxito",
-                                        },
-                                    ]}
-                                />
-                            </div>
+                                <div className="flex-1 overflow-auto px-4 py-4">
+                                    <Table
+                                        data={batch.items}
+                                        columns={[
+                                            { header: "SUA", key: "sua" },
+                                            { header: "Año", key: "year" },
+                                            {
+                                                header: "Estado",
+                                                render: () => (
+                                                    <span className="px-2 py-0.5 bg-green-900 text-green-300 border border-green-700 rounded-full text-xs font-semibold">
+                                                        Resuelto con éxito
+                                                    </span>
+                                                ),
+                                            },
+                                        ]}
+                                    />
+                                </div>
 
-                            <div className="flex justify-center gap-5 mt-4">
-                                <Button
-                                    text="Descargar resultados"
-                                    onClick={() => downloadResults(batch.items)}
-                                    className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg px-4 py-2"
-                                />
-
-                                <Button
-                                    className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl px-4 py-2"
-                                    text="Cerrar"
-                                    onClick={() =>
-                                        setModal({ status: false, type: null })
-                                    }
-                                />
-                            </div>
-                        </Div>
-                    )}
-                </Modal>
+                                <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-700">
+                                    <button
+                                        onClick={() =>
+                                            downloadResults(batch.items)
+                                        }
+                                        className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all"
+                                    >
+                                        <svg
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                        >
+                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                                            <polyline points="7 10 12 15 17 10" />
+                                            <line
+                                                x1="12"
+                                                y1="15"
+                                                x2="12"
+                                                y2="3"
+                                            />
+                                        </svg>
+                                        Descargar resultados
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            setModal({
+                                                status: false,
+                                                type: null,
+                                            })
+                                        }
+                                        className="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all"
+                                    >
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
             )}
-        </Div>
+        </div>
     );
 };
 

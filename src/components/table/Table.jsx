@@ -10,10 +10,9 @@ const Table = ({ columns, data }) => {
     }
 
     return (
-        <div className="rounded-lg shadow border border-gray-700 mt-6 overflow-auto max-h-[70vh]">
-            <table className="min-w-full border text-center border-gray-600 border-collapse rounded-lg overflow-hidden text-white">
-                {/* CABECERA */}
-                <thead className="bg-gray-700 text-gray-300 border-b border-gray-600">
+        <div className="w-full rounded-lg shadow border border-gray-700 mt-6 overflow-x-auto overflow-y-auto max-h-[70vh]">
+            <table className="w-full min-w-max border text-center border-gray-600 border-collapse text-white">
+                <thead className="bg-gray-700 text-gray-300 border-b border-gray-600 sticky top-0 z-10">
                     <tr>
                         {columns.map((col) => (
                             <th
@@ -25,8 +24,6 @@ const Table = ({ columns, data }) => {
                         ))}
                     </tr>
                 </thead>
-
-                {/* CUERPO */}
                 <tbody className="text-white">
                     {data.map((row, index) => (
                         <tr
