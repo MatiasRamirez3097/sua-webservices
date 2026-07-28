@@ -12,7 +12,6 @@ const Layout = () => {
         dispatch(loadUser());
     }, [dispatch]);
 
-    // 1. Pantalla de carga integrada a la nueva paleta de fondo profundo
     if (loading) {
         return (
             <div className="min-h-screen bg-[#0B0F19] text-white flex flex-col items-center justify-center gap-3">
@@ -24,7 +23,6 @@ const Layout = () => {
         );
     }
 
-    // 2. Pantalla de Login integrada con la tarjeta elevada en contraste
     if (!user || Object.keys(user).length === 0) {
         return (
             <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center px-4">
@@ -37,7 +35,6 @@ const Layout = () => {
         );
     }
 
-    // 3. Layout principal de la aplicación escalado y centrado
     return (
         <div className="min-h-screen flex flex-col bg-[#0B0F19] text-white antialiased">
             {/* Navbar fija en la parte superior */}
@@ -46,7 +43,7 @@ const Layout = () => {
             </div>
 
             {/* CONTENEDOR PRINCIPAL: Aquí es donde forzamos la nueva escala del monitor */}
-            <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <main className="flex-grow w-full px-4 sm:px-6 lg:px-8 py-8">
                 <Outlet />
             </main>
 

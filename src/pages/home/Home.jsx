@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 
 // ─── Slots de fotos — reemplazá las URLs por tus imágenes ────────────────────
 // Podés usar rutas locales: import foto1 from "../../assets/fotos/foto1.jpg"
-// O URLs externas. Por ahora usan un placeholder de color con descripción.
 const FOTOS = [
     {
         id: 1,
