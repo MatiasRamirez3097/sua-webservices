@@ -1,171 +1,167 @@
 import { Field, Form, Formik } from "formik";
-import { Button } from "..";
 import { signInSchema } from "./signInSchema";
 import Logo from "../../assets/Municipalidad_sin_fondo.png";
 import { sweetAlert } from "../alerts/SweetAlert";
+import PasswordInput from "../password/PasswordInput";
+import { Button, Notice } from "../ui/ui";
+import { FIELD_CLASS } from "../ui/styles";
 
-const LoginForm = ({ sendSubmit }) => {
-    const rememberedEmail = localStorage.getItem("rememberedEmail");
+/** Pantalla de ingreso. Siempre muestra un error genérico de credenciales. */
+const LoginForm = ({
+  sendSubmit,
+  loading = false,
+  error = null,
+  onClearError,
+}) => {
+  const rememberedEmail = localStorage.getItem("rememberedEmail");
 
-    return (
-        <Formik
+  return (
+    <div className="grid min-h-screen lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+      {/* Panel de marca */}
+      <aside className="relative hidden overflow-hidden bg-night px-12 py-10 text-night-text lg:flex lg:flex-col">
+        <div
+          aria-hidden="true"
+          className="login-grid pointer-events-none absolute inset-0"
+        />
+        <img
+          src={Logo}
+          alt="Municipalidad de Rosario"
+          className="relative -ml-7 h-20 w-fit brightness-0 invert opacity-90"
+        />
+        <div className="relative mt-auto max-w-md">
+          <p className="text-sm font-medium uppercase tracking-[0.12em] text-accent-bright">
+            Parques y Paseos
+          </p>
+          <p className="mt-3 text-3xl font-semibold leading-tight text-white">
+            SUA Webservices
+          </p>
+          <p className="mt-3 text-base leading-relaxed text-night-muted">
+            Resolución y derivación masiva de solicitudes del Sistema Único de
+            Atención, con seguimiento de cada lote.
+          </p>
+        </div>
+        <p className="relative mt-10 text-xs text-night-muted">
+          Centro de Informática Local
+        </p>
+      </aside>
+
+      <div className="flex flex-col items-center justify-center px-4 py-10">
+        <div className="w-full max-w-sm">
+          <img
+            src={Logo}
+            alt="Municipalidad de Rosario"
+            className="-ml-4 mb-6 h-14 w-auto lg:hidden"
+          />
+
+          <h1 className="text-xl font-semibold text-ink">Ingresar</h1>
+          <p className="mt-1 text-sm text-muted">
+            Usá tu usuario y contraseña de SUA Webservices.
+          </p>
+
+          <Formik
             initialValues={{
-                email: rememberedEmail || "",
-                password: "",
-                remember: !!rememberedEmail,
+              email: rememberedEmail || "",
+              password: "",
+              remember: !!rememberedEmail,
             }}
             validationSchema={signInSchema}
             onSubmit={(values, actions) => {
-                if (values.remember) {
-                    localStorage.setItem("rememberedEmail", values.email);
-                } else {
-                    localStorage.removeItem("rememberedEmail");
-                }
-                sendSubmit(values, actions);
+              const email = values.email.trim();
+              if (values.remember)
+                localStorage.setItem("rememberedEmail", email);
+              else localStorage.removeItem("rememberedEmail");
+              sendSubmit({ ...values, email }, actions);
             }}
-        >
-            {({ errors, touched }) => (
-                <Form className="space-y-5">
-                    {/* Logo + Título */}
-                    <div className="flex flex-col items-center gap-3 mb-2">
-                        <img
-                            src={Logo}
-                            alt="Municipalidad de Rosario"
-                            className="h-20 w-auto object-contain"
-                        />
-                        <div className="text-center">
-                            <h1 className="text-2xl font-bold text-white tracking-widest uppercase">
-                                SUA Webservices
-                            </h1>
-                            <p className="text-gray-400 text-sm mt-1">
-                                Dirección General de Parques y Paseos
-                            </p>
-                        </div>
-                    </div>
+          >
+            {({ errors, touched, values, setFieldValue, handleChange }) => (
+              <Form
+                className="mt-6 space-y-4 rounded-lg border border-line bg-surface p-6 shadow-sm"
+                noValidate
+              >
+                {error && <Notice>{error}</Notice>}
 
-                    {/* Separador */}
-                    <div className="border-t border-gray-700 pt-5">
-                        <p className="text-gray-400 text-xs uppercase tracking-widest text-center mb-5">
-                            Iniciar sesión
-                        </p>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor="login-email"
+                    className="text-sm font-medium text-ink"
+                  >
+                    Usuario
+                  </label>
+                  <Field
+                    id="login-email"
+                    name="email"
+                    type="text"
+                    inputMode="email"
+                    autoComplete="username"
+                    autoFocus={!values.email}
+                    onChange={(e) => {
+                      onClearError?.();
+                      handleChange(e);
+                    }}
+                    placeholder="nombre@rosario.gob.ar"
+                    aria-invalid={
+                      !!(errors.email && touched.email) || undefined
+                    }
+                    className={`${FIELD_CLASS} ${errors.email && touched.email ? "!border-danger" : ""}`}
+                  />
+                  {errors.email && touched.email && (
+                    <p className="text-xs text-danger">{errors.email}</p>
+                  )}
+                </div>
 
-                        {/* Email */}
-                        <div className="space-y-1 mb-4">
-                            <label className="text-gray-400 text-sm font-medium">
-                                Usuario
-                            </label>
-                            <div className="relative">
-                                {/* Ícono */}
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-4 w-4"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
-                                        />
-                                    </svg>
-                                </span>
-                                <Field
-                                    name="email"
-                                    type="text"
-                                    placeholder="usuario@rosario.gob.ar"
-                                    className="w-full pl-9 pr-4 py-2.5 text-sm rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                                />
-                            </div>
-                            {errors.email && touched.email && (
-                                <p className="text-red-400 text-xs mt-1">
-                                    {errors.email}
-                                </p>
-                            )}
-                        </div>
+                <PasswordInput
+                  label="Contraseña"
+                  name="password"
+                  value={values.password}
+                  onChange={(e) => {
+                    onClearError?.();
+                    setFieldValue("password", e.target.value);
+                  }}
+                  autoComplete="current-password"
+                  autoFocus={!!values.email}
+                  invalid={!!(errors.password && touched.password)}
+                  hint={touched.password ? errors.password : null}
+                />
 
-                        {/* Contraseña */}
-                        <div className="space-y-1 mb-4">
-                            <label className="text-gray-400 text-sm font-medium">
-                                Contraseña
-                            </label>
-                            <div className="relative">
-                                {/* Ícono */}
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-4 w-4"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                                        />
-                                    </svg>
-                                </span>
-                                <Field
-                                    name="password"
-                                    type="password"
-                                    placeholder="••••••••"
-                                    className="w-full pl-9 pr-4 py-2.5 text-sm rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                                />
-                            </div>
-                            {errors.password && touched.password && (
-                                <p className="text-red-400 text-xs mt-1">
-                                    {errors.password}
-                                </p>
-                            )}
-                        </div>
+                <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-muted">
+                  <Field
+                    type="checkbox"
+                    name="remember"
+                    className="h-4 w-4 accent-accent"
+                  />
+                  Recordar usuario
+                </label>
 
-                        {/* Recordarme */}
-                        <div className="flex items-center justify-between text-sm mb-5">
-                            <label className="flex items-center gap-2 cursor-pointer text-gray-400 hover:text-gray-300 transition-colors">
-                                <Field
-                                    type="checkbox"
-                                    name="remember"
-                                    className="w-4 h-4 rounded border-gray-600 bg-gray-800 accent-indigo-500"
-                                />
-                                <span className="text-xs">Recordarme</span>
-                            </label>
-
-                            <span
-                                onClick={() =>
-                                    sweetAlert.fire({
-                                        type: "info",
-                                        title: "¿Olvidaste tu contraseña?",
-                                        message:
-                                            "Contactate con el Centro de Informática Local para restablecer tu contraseña.",
-                                    })
-                                }
-                                className="text-indigo-400 hover:text-indigo-300 text-xs cursor-pointer transition-colors"
-                            >
-                                ¿Olvidaste tu contraseña?
-                            </span>
-                        </div>
-
-                        {/* Botón */}
-                        <button
-                            type="submit"
-                            className="w-full py-2.5 text-sm font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-all duration-200 shadow-lg tracking-wide"
-                        >
-                            Iniciar sesión
-                        </button>
-                    </div>
-
-                    {/* Footer */}
-                    <p className="text-center text-gray-600 text-xs pt-2">
-                        Centro de Informática Local — Municipalidad de Rosario
-                    </p>
-                </Form>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  loading={loading}
+                  className="w-full"
+                >
+                  {loading ? "Ingresando…" : "Ingresar"}
+                </Button>
+              </Form>
             )}
-        </Formik>
-    );
+          </Formik>
+
+          <button
+            type="button"
+            onClick={() =>
+              sweetAlert.fire({
+                type: "info",
+                title: "¿Olvidaste tu contraseña?",
+                message:
+                  "Pedile el blanqueo al Centro de Informática Local o a un administrador del sistema.",
+              })
+            }
+            className="mt-4 text-sm text-accent hover:underline"
+          >
+            ¿Olvidaste tu contraseña?
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default LoginForm;

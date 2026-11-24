@@ -1,22 +1,25 @@
-const TextArea = ({
-    label,
-    name,
-    onChange,
-    placeholder,
-    value,
-    className = "w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y",
-}) => {
+import { FIELD_CLASS } from "../ui/styles";
+
+const TextArea = ({ name, onChange, placeholder, value, rows = 4, maxLength, id }) => {
+    const length = value?.length ?? 0;
     return (
-        <>
+        <div>
             <textarea
+                id={id}
                 name={name}
                 onChange={onChange}
-                value={value}
-                rows={3}
-                className={className}
+                value={value ?? ""}
+                rows={rows}
+                maxLength={maxLength}
                 placeholder={placeholder}
+                className={`${FIELD_CLASS} h-auto py-2 resize-y leading-relaxed`}
             />
-        </>
+            {maxLength && (
+                <p className="mt-1 text-right text-xs text-faint tabular">
+                    {length} / {maxLength}
+                </p>
+            )}
+        </div>
     );
 };
 

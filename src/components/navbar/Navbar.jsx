@@ -1,480 +1,238 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { NavLink, Link, useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setToken } from "../../redux/slices/auth/authSlice";
 import Logo from "../../assets/Municipalidad_sin_fondo.png";
-import { RoleGuard } from "../";
+import PasswordFormModal from "../password/PasswordFormModal";
 import { sweetAlert } from "../alerts/SweetAlert";
 import { server } from "../../Api";
-import { ls } from "../../utils/ls";
+import { NAV_ITEMS, canSee } from "../../utils/access";
 
-// ─── Avatar con iniciales ─────────────────────────────────────────────────────
-const Avatar = ({ user, size = "w-9 h-9", text = "text-sm" }) => {
-    const initials =
-        `${user?.name?.[0] || ""}${user?.surname?.[0] || ""}`.toUpperCase();
-    return (
-        <div
-            className={`${size} rounded-full bg-indigo-600 flex items-center justify-center text-white ${text} font-bold select-none shrink-0`}
-        >
-            {initials || "U"}
-        </div>
-    );
-};
-
-const EyeIcon = ({ show }) => (
-    <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-    >
-        {show ? (
-            // ✅ Contraseña VISIBLE → mostrar ojo tachado (para ocultar)
-            <>
-                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
-                <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
-                <line x1="1" y1="1" x2="23" y2="23" />
-            </>
-        ) : (
-            // ✅ Contraseña OCULTA → mostrar ojo normal (para ver)
-            <>
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-            </>
-        )}
-    </svg>
-);
-
-const PasswordField = ({ label, value, show, onToggle, onChange }) => (
-    <div className="flex flex-col gap-1">
-        <label className="text-gray-400 text-xs font-medium">{label}</label>
-        <div className="relative">
-            <input
-                type={show ? "text" : "password"}
-                value={value}
-                onChange={onChange}
-                placeholder="••••••••"
-                className="w-full bg-gray-800 border border-gray-600 text-white text-sm rounded-lg px-3 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-            />
-            <button
-                type="button"
-                onClick={onToggle}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
-            >
-                <EyeIcon show={show} />
-            </button>
-        </div>
-    </div>
-);
-
-// ─── Modal cambio de contraseña ───────────────────────────────────────────────
 const ModalCambiarPassword = ({ onClose }) => {
-    const [form, setForm] = useState({ current: "", new: "", confirm: "" });
-    const [loading, setLoading] = useState(false);
-    const [showCurrent, setShowCurrent] = useState(false);
-    const [showNew, setShowNew] = useState(false);
-    const [showConfirm, setShowConfirm] = useState(false);
-
-    const handleSubmit = async () => {
-        if (!form.current || !form.new || !form.confirm) {
-            return sweetAlert.fire({
-                type: "warning",
-                title: "Campos incompletos",
-                message: "Completá todos los campos.",
-            });
-        }
-        if (form.new.length < 6) {
-            return sweetAlert.fire({
-                type: "warning",
-                title: "Contraseña inválida",
-                message:
-                    "La nueva contraseña debe tener al menos 6 caracteres.",
-            });
-        }
-        if (form.new !== form.confirm) {
-            return sweetAlert.fire({
-                type: "warning",
-                title: "No coinciden",
-                message: "La nueva contraseña y la confirmación no coinciden.",
-            });
-        }
-
-        setLoading(true);
+    const dispatch = useDispatch();
+    const handleSubmit = async ({ current, password }) => {
         try {
-            const token = ls.getText("token");
-            const res = await server.put(
-                "/users/changepassword",
-                {
-                    currentPassword: form.current,
-                    newPassword: form.new,
-                },
-                {
-                    headers: { Authorization: "Bearer " + token },
-                },
-            );
-
-            if (res.data.success) {
-                sweetAlert.fire({
-                    type: "success",
-                    title: "Contraseña actualizada",
-                    message: "Tu contraseña fue cambiada correctamente.",
-                });
-                onClose();
-            } else {
-                sweetAlert.fire({
-                    type: "error",
-                    title: "Error",
-                    message:
-                        res.data.error || "No se pudo cambiar la contraseña.",
-                });
-            }
-        } catch (err) {
-            sweetAlert.fire({
-                type: "error",
-                title: "Error",
-                message:
-                    err.response?.data?.error || "Ocurrió un error inesperado.",
+            const res = await server.put("/users/changepassword", {
+                currentPassword: current,
+                newPassword: password,
             });
-        } finally {
-            setLoading(false);
+            if (!res.data.success)
+                throw new Error(res.data.error || "No se pudo cambiar la contraseña.");
+            // Las sesiones anteriores quedan invalidadas; guardamos el token nuevo
+            if (res.data.token) dispatch(setToken(res.data.token));
+        } catch (err) {
+            throw new Error(
+                err.response?.data?.error || err.message || "Ocurrió un error inesperado.",
+            );
         }
+        onClose();
+        sweetAlert.fire({ type: "success", title: "Contraseña actualizada" });
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
-            <div className="bg-gray-900 w-full max-w-sm rounded-2xl border border-gray-700 shadow-2xl p-6">
-                <div className="flex justify-between items-center border-b border-gray-700 pb-4 mb-5">
-                    <div>
-                        <h2 className="text-white font-semibold text-base">
-                            Cambiar contraseña
-                        </h2>
-                        <p className="text-gray-500 text-xs mt-0.5">
-                            Ingresá tu contraseña actual y la nueva
-                        </p>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-500 hover:text-white text-xl transition-colors"
-                    >
-                        ✕
-                    </button>
-                </div>
-
-                <div className="space-y-4">
-                    <PasswordField
-                        label="Contraseña actual"
-                        value={form.current}
-                        show={showCurrent}
-                        onToggle={() => setShowCurrent(!showCurrent)}
-                        onChange={(e) =>
-                            setForm({ ...form, current: e.target.value })
-                        }
-                    />
-                    <PasswordField
-                        label="Nueva contraseña"
-                        value={form.new}
-                        show={showNew}
-                        onToggle={() => setShowNew(!showNew)}
-                        onChange={(e) =>
-                            setForm({ ...form, new: e.target.value })
-                        }
-                    />
-                    <PasswordField
-                        label="Confirmar nueva contraseña"
-                        value={form.confirm}
-                        show={showConfirm}
-                        onToggle={() => setShowConfirm(!showConfirm)}
-                        onChange={(e) =>
-                            setForm({ ...form, confirm: e.target.value })
-                        }
-                    />
-                </div>
-
-                <div className="flex gap-3 mt-6">
-                    <button
-                        onClick={onClose}
-                        className="flex-1 px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-800 transition-all text-sm"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={loading}
-                        className="flex-1 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {loading ? "Guardando..." : "Guardar"}
-                    </button>
-                </div>
-            </div>
-        </div>
+        <PasswordFormModal
+            title="Cambiar contraseña"
+            subtitle="Ingresá tu contraseña actual y elegí una nueva."
+            requireCurrent
+            onSubmit={handleSubmit}
+            onClose={onClose}
+        />
     );
 };
 
-// ─── Componente principal ─────────────────────────────────────────────────────
-const Navbar = ({
-    toggleLogin,
-    logout,
-    className = "bg-[#151D30]/90 backdrop-blur-md border-b border-gray-800 text-white sticky top-0 left-0 w-full z-50",
-    user = {},
-}) => {
+const Chevron = ({ open }) => (
+    <svg
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        aria-hidden="true"
+        className={`text-night-muted transition-transform duration-150 ${open ? "rotate-180" : ""}`}
+    >
+        <polyline points="6 9 12 15 18 9" />
+    </svg>
+);
+
+const Navbar = ({ logout, user = {} }) => {
     const location = useLocation();
-    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false);
     const [modalPassword, setModalPassword] = useState(false);
-    const dropdownRef = useRef(null);
+    const menuRef = useRef(null);
 
-    const hasUser = user && Object.keys(user).length > 0;
-
-    const linkClass = (path) => `
-        text-base font-semibold tracking-wide transition-all duration-200 py-2 border-b-2 whitespace-nowrap
-        ${
-            location.pathname === path
-                ? "text-indigo-400 border-indigo-500"
-                : "text-gray-300 border-transparent hover:text-white hover:border-gray-600"
-        }
-    `;
+    const items = NAV_ITEMS.filter((item) => canSee(user, item));
 
     useEffect(() => {
-        const handleClick = (e) => {
-            if (
-                dropdownRef.current &&
-                !dropdownRef.current.contains(e.target)
-            ) {
-                setDropdownOpen(false);
-            }
+        setMobileOpen(false);
+        setMenuOpen(false);
+    }, [location.pathname]);
+
+    useEffect(() => {
+        const onClick = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
         };
-        document.addEventListener("mousedown", handleClick);
-        return () => document.removeEventListener("mousedown", handleClick);
+        const onKey = (e) => e.key === "Escape" && setMenuOpen(false);
+        document.addEventListener("mousedown", onClick);
+        document.addEventListener("keydown", onKey);
+        return () => {
+            document.removeEventListener("mousedown", onClick);
+            document.removeEventListener("keydown", onKey);
+        };
     }, []);
 
-    const rolLabel =
-        {
-            admin: "Administrador",
-            fiscalizado: "Fiscalizado",
-        }[user?.role] || null;
+    const linkClass = ({ isActive }) =>
+        `relative flex h-9 items-center rounded-md px-3 text-[15px] transition-colors ${
+            isActive
+                ? "bg-night-raised font-medium text-white after:absolute after:inset-x-3 after:-bottom-[15px] after:h-0.5 after:rounded-full after:bg-accent-bright"
+                : "text-night-muted hover:bg-night-raised/60 hover:text-night-text"
+        }`;
+
+    const initials = `${user?.name?.[0] ?? ""}${user?.surname?.[0] ?? ""}`.toUpperCase() || "U";
+
+    const fullName = `${user?.name ?? ""} ${user?.surname ?? ""}`.trim();
 
     return (
         <>
-            <nav className={className}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* Usamos justify-between para separar el Logo de los Links de forma natural */}
-                    <div className="flex items-center justify-between h-24 gap-4">
-                        {/* BRAND / LOGO (Izquierda) - El shrink-0 evita que se encimen elementos aquí */}
-                        <Link
-                            to="/home"
-                            className="flex items-center gap-4 group shrink-0"
+            <header className="border-b border-night-line bg-night text-night-text">
+                <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4 sm:px-6">
+                    <Link to="/home" className="flex shrink-0 items-center gap-3">
+                        {/* El PNG trae mucho margen transparente: lo compensamos con márgenes negativos */}
+                        <img
+                            src={Logo}
+                            alt="Municipalidad de Rosario"
+                            className="-mx-3 h-12 w-auto brightness-0 invert opacity-90"
+                        />
+                        <span className="h-6 w-px bg-night-line" aria-hidden="true" />
+                        <span className="text-base font-semibold tracking-tight text-white">
+                            SUA <span className="font-normal text-accent-bright">Webservices</span>
+                        </span>
+                    </Link>
+
+                    <nav aria-label="Principal" className="hidden h-16 items-center gap-1 md:flex">
+                        {items.map((item) => (
+                            <NavLink key={item.to} to={item.to} className={linkClass}>
+                                {item.label}
+                            </NavLink>
+                        ))}
+                    </nav>
+
+                    <div className="relative ml-auto hidden md:block" ref={menuRef}>
+                        <button
+                            type="button"
+                            onClick={() => setMenuOpen((o) => !o)}
+                            aria-expanded={menuOpen}
+                            aria-haspopup="menu"
+                            className="flex items-center gap-2.5 rounded-md py-1 pl-1 pr-2 text-sm text-night-text hover:bg-night-raised"
                         >
-                            <img
-                                src={Logo}
-                                alt="Municipalidad de Rosario"
-                                className="h-16 w-auto object-contain transition-transform group-hover:scale-102"
-                            />
-                            <span className="font-extrabold text-xl lg:text-2xl tracking-wide bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent whitespace-nowrap">
-                                SUA Webservices
-                            </span>
-                        </Link>
-
-                        {/* BLOQUE DERECHO (Links de navegación + Separador + Usuario) */}
-                        <div className="hidden md:flex items-center gap-4 lg:gap-6 text-right">
-                            {/* LINKS DE NAVEGACIÓN */}
-                            <div className="flex items-center gap-4 lg:gap-6">
-                                <Link to="/home" className={linkClass("/home")}>
-                                    Home
-                                </Link>
-
-                                <RoleGuard module="rodados">
-                                    <Link
-                                        to="/rodados"
-                                        className={linkClass("/rodados")}
-                                    >
-                                        Rodados
-                                    </Link>
-                                </RoleGuard>
-
-                                <RoleGuard module="estadocargas">
-                                    <Link
-                                        to="/estadocargas"
-                                        className={linkClass("/estadocargas")}
-                                    >
-                                        Estado de cargas
-                                    </Link>
-                                </RoleGuard>
-
-                                <RoleGuard module="gestionsua">
-                                    <Link
-                                        to="/gestionSua"
-                                        className={linkClass("/gestionSua")}
-                                    >
-                                        Gestión SUA
-                                    </Link>
-                                </RoleGuard>
-
-                                {user?.role === "admin" && (
-                                    <Link
-                                        to="/usuarios"
-                                        className={linkClass("/usuarios")}
-                                    >
-                                        Usuarios
-                                    </Link>
-                                )}
-                            </div>
-
-                            {/* SEPARADOR VISUAL */}
                             <span
-                                className="h-6 w-px bg-gray-700 shrink-0"
                                 aria-hidden="true"
-                            />
+                                className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-xs font-semibold text-white"
+                            >
+                                {initials}
+                            </span>
+                            <span className="max-w-[200px] truncate">{fullName || user?.email}</span>
+                            <Chevron open={menuOpen} />
+                        </button>
 
-                            {/* SECCIÓN DE USUARIO / LOGIN */}
-                            <div className="shrink-0">
-                                {hasUser ? (
-                                    <div className="relative" ref={dropdownRef}>
-                                        <button
-                                            onClick={() =>
-                                                setDropdownOpen(!dropdownOpen)
-                                            }
-                                            className="flex items-center gap-3 px-4 py-2 rounded-xl border border-gray-700/60 bg-gray-800/30 hover:bg-white/5 transition-colors"
-                                        >
-                                            <Avatar user={user} />
-                                            <div className="text-left hidden lg:block max-w-[180px]">
-                                                <p className="text-white text-sm font-semibold leading-tight truncate">
-                                                    {user?.name} {user?.surname}
-                                                </p>
-                                                <p className="text-gray-500 text-xs leading-tight truncate">
-                                                    {user?.area ||
-                                                        rolLabel ||
-                                                        "Sin área"}
-                                                </p>
-                                            </div>
-                                            <svg
-                                                width="12"
-                                                height="12"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2.5"
-                                                className={`text-gray-400 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
-                                            >
-                                                <polyline points="6 9 12 15 18 9" />
-                                            </svg>
-                                        </button>
-
-                                        {/* DROPDOWN MENU */}
-                                        {dropdownOpen && (
-                                            <div className="absolute right-0 top-full mt-2 w-64 bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden z-50">
-                                                <div className="px-5 py-4 border-b border-gray-700 flex items-center gap-3">
-                                                    <Avatar
-                                                        user={user}
-                                                        size="w-10 h-10"
-                                                        text="text-base"
-                                                    />
-                                                    <div className="min-w-0">
-                                                        <p className="text-white font-semibold text-sm truncate">
-                                                            {user?.name}{" "}
-                                                            {user?.surname}
-                                                        </p>
-                                                        <p className="text-gray-400 text-xs truncate">
-                                                            {user?.email}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                <div className="px-5 py-3 space-y-2 border-b border-gray-700">
-                                                    {user?.area && (
-                                                        <div className="flex justify-between items-center gap-2">
-                                                            <span className="text-gray-500 text-xs shrink-0">
-                                                                Área
-                                                            </span>
-                                                            <span className="text-gray-300 text-xs font-medium truncate">
-                                                                {user.area}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className="py-1">
-                                                    <button
-                                                        onClick={() => {
-                                                            setDropdownOpen(
-                                                                false,
-                                                            );
-                                                            setModalPassword(
-                                                                true,
-                                                            );
-                                                        }}
-                                                        className="w-full flex items-center gap-3 px-5 py-3 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors text-sm"
-                                                    >
-                                                        <svg
-                                                            width="15"
-                                                            height="15"
-                                                            viewBox="0 0 24 24"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            strokeWidth="2"
-                                                        >
-                                                            <rect
-                                                                x="3"
-                                                                y="11"
-                                                                width="18"
-                                                                height="11"
-                                                                rx="2"
-                                                                ry="2"
-                                                            />
-                                                            <path d="M7 11V7a5 5 0 0110 0v4" />
-                                                        </svg>
-                                                        Cambiar contraseña
-                                                    </button>
-
-                                                    <button
-                                                        onClick={() => {
-                                                            setDropdownOpen(
-                                                                false,
-                                                            );
-                                                            logout();
-                                                        }}
-                                                        className="w-full flex items-center gap-3 px-5 py-3 text-red-400 hover:bg-gray-800 hover:text-red-300 transition-colors text-sm"
-                                                    >
-                                                        <svg
-                                                            width="15"
-                                                            height="15"
-                                                            viewBox="0 0 24 24"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            strokeWidth="2"
-                                                        >
-                                                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-                                                            <polyline points="16 17 21 12 16 7" />
-                                                            <line
-                                                                x1="21"
-                                                                y1="12"
-                                                                x2="9"
-                                                                y2="12"
-                                                            />
-                                                        </svg>
-                                                        Cerrar sesión
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <button
-                                        onClick={toggleLogin}
-                                        className="text-base font-bold bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-600/25"
-                                    >
-                                        Iniciar sesión
-                                    </button>
-                                )}
+                        {menuOpen && (
+                            <div
+                                role="menu"
+                                className="absolute right-0 top-full z-50 mt-2 w-64 rounded-lg border border-line bg-surface py-1 text-left text-ink shadow-lg"
+                            >
+                                <div className="border-b border-line px-4 py-3">
+                                    <p className="truncate text-sm font-medium text-ink">{fullName}</p>
+                                    <p className="truncate text-sm text-muted">{user?.email}</p>
+                                    {(user?.area || user?.isAdmin) && (
+                                        <p className="mt-1 text-xs text-faint">
+                                            {[user?.isAdmin && "Administrador", user?.area]
+                                                .filter(Boolean)
+                                                .join(" · ")}
+                                        </p>
+                                    )}
+                                </div>
+                                <button
+                                    role="menuitem"
+                                    type="button"
+                                    onClick={() => {
+                                        setMenuOpen(false);
+                                        setModalPassword(true);
+                                    }}
+                                    className="block w-full px-4 py-2 text-left text-sm text-ink hover:bg-subtle"
+                                >
+                                    Cambiar contraseña
+                                </button>
+                                <button
+                                    role="menuitem"
+                                    type="button"
+                                    onClick={logout}
+                                    className="block w-full px-4 py-2 text-left text-sm text-danger hover:bg-danger-soft"
+                                >
+                                    Cerrar sesión
+                                </button>
                             </div>
+                        )}
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => setMobileOpen((o) => !o)}
+                        aria-expanded={mobileOpen}
+                        aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+                        className="ml-auto rounded-md p-2 text-night-muted hover:bg-night-raised hover:text-white md:hidden"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                            {mobileOpen ? (
+                                <path d="M18 6L6 18M6 6l12 12" />
+                            ) : (
+                                <path d="M3 6h18M3 12h18M3 18h18" />
+                            )}
+                        </svg>
+                    </button>
+                </div>
+
+                {mobileOpen && (
+                    <div className="border-t border-night-line px-4 py-3 text-left md:hidden">
+                        <p className="px-2 text-sm font-medium text-white">{fullName}</p>
+                        <p className="mb-2 px-2 text-sm text-night-muted">{user?.email}</p>
+                        <nav aria-label="Principal" className="flex flex-col">
+                            {items.map((item) => (
+                                <NavLink
+                                    key={item.to}
+                                    to={item.to}
+                                    className={({ isActive }) =>
+                                        `rounded-md px-2 py-2 text-sm ${isActive ? "bg-night-raised font-medium text-white" : "text-night-muted hover:bg-night-raised hover:text-white"}`
+                                    }
+                                >
+                                    {item.label}
+                                </NavLink>
+                            ))}
+                        </nav>
+                        <div className="mt-2 flex flex-col border-t border-night-line pt-2">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setMobileOpen(false);
+                                    setModalPassword(true);
+                                }}
+                                className="rounded-md px-2 py-2 text-left text-sm text-night-muted hover:bg-night-raised hover:text-white"
+                            >
+                                Cambiar contraseña
+                            </button>
+                            <button
+                                type="button"
+                                onClick={logout}
+                                className="rounded-md px-2 py-2 text-left text-sm text-[#ff9d94] hover:bg-night-raised"
+                            >
+                                Cerrar sesión
+                            </button>
                         </div>
                     </div>
-                </div>
-            </nav>
+                )}
+            </header>
 
-            {/* MODAL CAMBIAR CONTRASEÑA */}
-            {modalPassword && (
-                <ModalCambiarPassword onClose={() => setModalPassword(false)} />
-            )}
+            {modalPassword && <ModalCambiarPassword onClose={() => setModalPassword(false)} />}
         </>
     );
 };

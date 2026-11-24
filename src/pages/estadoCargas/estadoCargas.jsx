@@ -1,458 +1,264 @@
-import { useEffect, useState } from "react";
-import { Button, Div, Modal, Table, H2 } from "../../components";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Table } from "../../components";
+import { Button, Dialog, Page, Status, Tabs } from "../../components/ui/ui";
 import {
     getBatches,
     getOneBatch,
     rescheduleBatch,
     deleteOneBatch,
     cancelBatch,
-    setNewExecutionDate,
 } from "../../redux/slices/sua/batchSlice.js";
 import createCSV from "../../utils/createCSV";
 import { sweetAlert } from "../../components/alerts/SweetAlert";
-import basuraIcon from "../../assets/icons/basura_icon.svg";
-import calendarioIcon from "../../assets/icons/calendario_icon.svg";
-import cancelarIcon from "../../assets/icons/cancelar_icon.svg";
-import confirmacionIcon from "../../assets/icons/confirmacion_icon.svg";
-import exclamacionIcon from "../../assets/icons/exclamacion_icon.svg";
+import {
+    TYPE_LABELS,
+    batchStatus,
+    formatDateTime,
+    itemRequestId,
+} from "../../utils/batchFormat";
+import { PERM, can, canManageBatch } from "../../utils/access";
+
+const ITEM_FIELDS = "requestId,sua,year,status,errorDetail";
+const FIFTEEN_MIN = 15 * 60 * 1000;
+
+const FILTERS = [
+    { value: "ALL", label: "Todos" },
+    { value: "PENDING", label: "Pendientes" },
+    { value: "PROCESSING", label: "Procesando" },
+    { value: "COMPLETED", label: "Completados" },
+    { value: "CANCELED", label: "Cancelados" },
+];
+
+const downloadCsv = (rows, filename) => {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(createCSV(rows));
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+// Se puede cancelar/reprogramar hasta 15 minutos antes de la ejecución
+const isEditable = (b) =>
+    b.status === "PENDING" && b.scheduledAt && new Date(b.scheduledAt) - Date.now() > FIFTEEN_MIN;
+
+const ActionLink = ({ children, tone = "accent", ...rest }) => (
+    <button
+        type="button"
+        className={`text-sm font-medium hover:underline ${tone === "danger" ? "text-danger" : "text-accent"}`}
+        {...rest}
+    >
+        {children}
+    </button>
+);
 
 const EstadoCargas = () => {
     const dispatch = useDispatch();
-
-    const { batch, list, newExecutionDate } = useSelector(
-        (store) => store.batches,
-    );
+    const { batch, list, loading } = useSelector((store) => store.batches);
+    const { user } = useSelector((store) => store.auth);
+    const canDelete = can(user, PERM.LOTES_GESTIONAR_TODOS);
+    const [filter, setFilter] = useState("ALL");
+    const [detail, setDetail] = useState(null); // "errors" | "results" | null
 
     useEffect(() => {
         dispatch(getBatches());
     }, [dispatch]);
 
+    // Refresco automático mientras haya lotes en curso
     useEffect(() => {
-        const checkActiveProccess = list.some(
-            (b) => b.status === "PROCESSING" || b.status === "PENDING",
-        );
-
-        if (checkActiveProccess) {
-            const intervalId = setInterval(() => {
-                dispatch(getBatches());
-            }, 3000);
-
-            return () => clearInterval(intervalId);
-        }
+        const processing = list.some((b) => b.status === "PROCESSING");
+        const pending = list.some((b) => b.status === "PENDING");
+        if (!processing && !pending) return;
+        const id = setInterval(() => dispatch(getBatches()), processing ? 3000 : 30000);
+        return () => clearInterval(id);
     }, [list, dispatch]);
 
-    const [modal, setModal] = useState({
-        status: false,
-        type: null,
-    });
+    const counts = useMemo(() => {
+        const c = { ALL: list.length };
+        for (const b of list) c[b.status] = (c[b.status] ?? 0) + 1;
+        return c;
+    }, [list]);
 
-    const getErrors = async (id) => {
+    const rows = filter === "ALL" ? list : list.filter((b) => b.status === filter);
+
+    const openDetail = async (id, type) => {
         await dispatch(
-            getOneBatch({
-                id: id,
-                onlyErrors: true,
-                fields: "date",
-                itemsFields: "sua,year,errorDetail",
-            }),
+            getOneBatch({ id, onlyErrors: type === "errors", fields: "date", itemsFields: ITEM_FIELDS }),
         );
-        setModal({
-            status: true,
-            type: "errors",
-        });
+        setDetail(type);
     };
 
-    const downloadErrors = (errors) => {
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(createCSV(errors));
-        link.setAttribute("href", url);
-        link.setAttribute("download", "reporte_errores.csv");
-        link.style.visibility = "hidden";
-
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    const run = async (action, successTitle, fallbackError) => {
+        try {
+            await dispatch(action).unwrap();
+            dispatch(getBatches());
+            sweetAlert.fire({ type: "success", title: successTitle });
+        } catch (error) {
+            sweetAlert.fire({ type: "error", title: "No se pudo completar", message: error || fallbackError });
+        }
     };
 
-    const getResults = async (id) => {
-        await dispatch(
-            getOneBatch({
-                id: id,
-                onlyErrors: false,
-                fields: "date",
-                itemsFields: "sua,year,status",
-            }),
-        );
-
-        setModal({
-            status: true,
-            type: "results",
-        });
-    };
-
-    const canCancel = (batch) => {
-        if (batch.status !== "PENDING") return false;
-        if (!batch.scheduledAt) return false;
-
-        const now = new Date();
-        const scheduledTime = new Date(batch.scheduledAt);
-        const diff = scheduledTime - now;
-
-        const FIFTEEN_MIN = 15 * 60 * 1000;
-
-        return diff > FIFTEEN_MIN;
-    };
-
-    const sendDelete = async (id) => {
-        const confirm = await sweetAlert.fire({
-            type: "question",
-            title: "¿Eliminar lote?",
-            message: "Esta acción no se puede deshacer.",
+    const handleDelete = async (id) => {
+        const { isConfirmed } = await sweetAlert.fire({
+            type: "warning",
+            title: "¿Eliminar el lote?",
+            message: "Se borra el lote y sus registros. No se puede deshacer.",
             showCancelButton: true,
             confirmButtonText: "Eliminar",
-            cancelButtonText: "Cancelar",
+            cancelButtonText: "Volver",
+            danger: true,
         });
-
-        if (!confirm.isConfirmed) return;
-
-        try {
-            await dispatch(deleteOneBatch(id)).unwrap();
-
-            dispatch(getBatches());
-
-            sweetAlert.fire({
-                type: "success",
-                title: "Eliminado",
-                message: "El lote fue eliminado correctamente.",
-            });
-        } catch (error) {
-            sweetAlert.fire({
-                type: "error",
-                title: "Error",
-                message: error || "No se pudo eliminar el lote.",
-            });
-        }
+        if (isConfirmed) run(deleteOneBatch(id), "Lote eliminado", "No se pudo eliminar el lote.");
     };
 
     const handleReschedule = async (id) => {
         const { value: newDate } = await sweetAlert.fire({
             type: "question",
-            title: "Nueva fecha de ejecución",
-            message: "Ingrese la nueva fecha de ejecución",
+            title: "Cambiar fecha de ejecución",
+            message: "El lote vuelve a quedar pendiente para la nueva fecha.",
             input: "datetime-local",
-            inputLabel: "Seleccionar fecha",
             showCancelButton: true,
-            confirmButtonText: "Reprogramar",
-            cancelButtonText: "Cancelar",
+            confirmButtonText: "Guardar",
+            cancelButtonText: "Volver",
         });
-
-        if (!newDate) return;
-
-        try {
-            await dispatch(
-                rescheduleBatch({
-                    id,
-                    newDate,
-                }),
-            ).unwrap();
-
-            dispatch(getBatches());
-
-            sweetAlert.fire({
-                type: "success",
-                title: "Reprogramado",
-                message: "El lote fue reprogramado a una nueva fecha.",
-            });
-        } catch (error) {
-            sweetAlert.fire({
-                type: "error",
-                title: "Error",
-                message: error || "No se pudo reprogramar.",
-            });
-        }
+        if (newDate) run(rescheduleBatch({ id, newDate }), "Fecha actualizada", "No se pudo reprogramar.");
     };
 
     const handleCancel = async (id) => {
-        const confirm = await sweetAlert.fire({
-            type: "question",
-            title: "¿Cancelar lote cargado?",
-            message: "El lote cargado pasará a estado cancelado.",
+        const { isConfirmed } = await sweetAlert.fire({
+            type: "warning",
+            title: "¿Cancelar el lote?",
+            message: "No se va a ejecutar. Después podés reprogramarlo o eliminarlo.",
             showCancelButton: true,
-            confirmButtonText: "Cancelar",
+            confirmButtonText: "Cancelar lote",
             cancelButtonText: "Volver",
+            danger: true,
         });
-
-        if (!confirm.isConfirmed) return;
-
-        try {
-            await dispatch(cancelBatch(id)).unwrap();
-
-            dispatch(getBatches());
-
-            sweetAlert.fire({
-                type: "success",
-                title: "Carga cancelada",
-                message: "El lote fue cancelado correctamente.",
-            });
-        } catch (error) {
-            sweetAlert.fire({
-                type: "error",
-                title: "Error",
-                message: error || "No se pudo cancelar.",
-            });
-        }
+        if (isConfirmed) run(cancelBatch(id), "Lote cancelado", "No se pudo cancelar.");
     };
 
-    const downloadResults = (results) => {
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(createCSV(results));
-        link.setAttribute("href", url);
-        link.setAttribute("download", "reporte_resultados.csv");
-        link.style.visibility = "hidden";
-
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
+    const items = batch?.items ?? [];
+    const okCount = items.filter((i) => i.status === "SUCCESS").length;
+    const okLabel = batch?.processType === "DERIVACION" ? "Derivada" : "Resuelta";
 
     return (
-        <div className="w-full px-2 mb-8">
-            {/* HEADER */}
-            <div className="mb-6 pb-4 border-b border-gray-700">
-                <h1 className="text-2xl font-bold text-white tracking-widest uppercase">
-                    Estado de Cargas
-                </h1>
-                <p className="text-gray-400 text-sm mt-1">
-                    Monitoreo de lotes procesados
-                </p>
-            </div>
-
+        <Page
+            title="Estado de cargas"
+            description="Lotes agendados y su resultado. Se actualiza solo mientras haya lotes en curso."
+            actions={
+                <Button size="sm" variant="on-dark" onClick={() => dispatch(getBatches())} loading={loading}>
+                    Actualizar
+                </Button>
+            }
+            hero={
+                <Tabs
+                    dark
+                    label="Filtrar por estado"
+                    value={filter}
+                    onChange={setFilter}
+                    tabs={FILTERS.map((f) => ({ ...f, count: counts[f.value] ?? 0 }))}
+                />
+            }
+        >
             <Table
-                data={list}
+                data={rows}
+                empty="No hay lotes en este estado."
                 columns={[
-                    { header: "Fecha", key: "date" },
                     {
-                        header: "Fecha ejecución",
-                        render: (row) => {
-                            if (
-                                !row.scheduledAt ||
-                                row.scheduledAt.startsWith("1970")
-                            ) {
-                                return (
-                                    <span className="text-gray-500">
-                                        Sin programar
-                                    </span>
-                                );
-                            }
-                            const date = new Date(row.scheduledAt);
-                            return (
-                                <span>
-                                    {date.toLocaleString("es-AR", {
-                                        day: "2-digit",
-                                        month: "2-digit",
-                                        year: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                    })}
-                                </span>
-                            );
-                        },
+                        header: "Ejecución",
+                        render: (row) => (
+                            <span className="tabular">{formatDateTime(row.scheduledAt) ?? <span className="text-faint">Sin programar</span>}</span>
+                        ),
                     },
-                    { header: "Tipo", key: "processType" },
                     {
-                        header: "Usuario",
-                        render: (row) =>
-                            !row.user ? (
-                                <span className="text-gray-500">
-                                    Desconocido
+                        header: "Tipo",
+                        render: (row) => (
+                            <span className="block leading-tight">
+                                {TYPE_LABELS[row.processType] || row.processType}
+                                <span className="ml-1.5 text-sm text-muted">
+                                    {row.processType === "DERIVACION"
+                                        ? row.extraData?.idAreaDerivada && `a ${row.extraData.idAreaDerivada}`
+                                        : row.idArea}
                                 </span>
+                                {row.date && (
+                                    <span className="mt-0.5 block text-xs tabular text-faint">
+                                        Resolución {row.date.slice(0, 16)}
+                                    </span>
+                                )}
+                            </span>
+                        ),
+                    },
+                    {
+                        header: "Cargado por",
+                        render: (row) =>
+                            row.user ? (
+                                `${row.user.name} ${row.user.surname}`
                             ) : (
-                                <span className="font-medium text-white">
-                                    {row.user.name} {row.user.surname}
+                                <span className="text-faint" title="Usuario eliminado o inexistente">
+                                    —
                                 </span>
                             ),
                     },
-                    { header: "Solicitudes", key: "totalRecords" },
-                    { header: "Procesados", key: "processed" },
-                    { header: "Errores", key: "errorsCount" },
+                    { header: "Solicitudes", key: "totalRecords", align: "right" },
+                    {
+                        header: "Errores",
+                        align: "right",
+                        render: (row) => (
+                            <span className={row.errorsCount > 0 ? "font-medium text-danger" : "text-faint"}>
+                                {row.errorsCount ?? 0}
+                            </span>
+                        ),
+                    },
                     {
                         header: "Estado",
                         render: (row) => {
-                            const styles = {
-                                COMPLETED:
-                                    "bg-green-900 text-green-300 border border-green-700",
-                                PROCESSING:
-                                    "bg-blue-900 text-blue-300 border border-blue-700",
-                                PENDING:
-                                    "bg-yellow-900 text-yellow-300 border border-yellow-700",
-                                CANCELED:
-                                    "bg-gray-700 text-gray-300 border border-gray-500",
-                                ERROR: "bg-red-900 text-red-300 border border-red-700",
-                            };
-                            const labels = {
-                                COMPLETED: "Completado",
-                                PROCESSING: "Procesando",
-                                PENDING: "Pendiente",
-                                CANCELED: "Cancelado",
-                                ERROR: "Error",
-                            };
-                            return (
-                                <span
-                                    className={`px-2 py-1 rounded-full text-xs font-semibold ${styles[row.status] || "bg-gray-700 text-gray-300"}`}
-                                >
-                                    {labels[row.status] || row.status}
-                                </span>
-                            );
-                        },
-                    },
-                    {
-                        header: "Progreso",
-                        render: (row) => {
-                            const total = row.totalRecords || 1;
-                            const processed = row.processed || 0;
-                            const percentage = Math.round(
-                                (processed / total) * 100,
-                            );
-                            let barColor = "bg-blue-600";
-                            if (row.status === "ERROR") barColor = "bg-red-500";
-                            if (row.status === "COMPLETED")
-                                barColor = "bg-green-500";
-                            return (
-                                <div className="w-32">
-                                    <div className="flex justify-between text-xs mb-1">
-                                        <span>{percentage}%</span>
-                                        <span className="text-gray-400">
-                                            {processed}/{total}
-                                        </span>
-                                    </div>
-                                    <div className="w-full bg-gray-700 rounded-full h-2.5 overflow-hidden">
-                                        <div
-                                            className={`${barColor} h-2.5 rounded-full transition-all duration-500`}
-                                            style={{ width: `${percentage}%` }}
-                                        />
-                                    </div>
-                                    {row.status === "PROCESSING" && (
-                                        <span className="text-[10px] text-blue-400 animate-pulse">
-                                            Procesando...
-                                        </span>
-                                    )}
-                                </div>
-                            );
-                        },
-                    },
-                    {
-                        header: "Acciones",
-                        render: (row) => (
-                            <div className="flex items-center gap-3">
-                                {row.status === "PENDING" && canCancel(row) && (
-                                    <div className="relative group">
-                                        <button
-                                            onClick={() =>
-                                                handleCancel(row._id)
-                                            }
-                                            className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-xl"
-                                        >
-                                            <img
-                                                src={basuraIcon}
-                                                className="w-5 h-5"
+                            if (row.status === "PROCESSING")
+                                return (
+                                    <span className="inline-flex min-w-36 flex-col gap-1">
+                                        <Status tone="accent" live>
+                                            Procesando {row.processed ?? 0}/{row.totalRecords}
+                                        </Status>
+                                        <span className="h-1 overflow-hidden rounded-full bg-accent-soft">
+                                            <span
+                                                className="bar-shimmer block h-full rounded-full bg-accent transition-[width] duration-700 ease-out"
+                                                style={{ width: `${Math.round(((row.processed ?? 0) / (row.totalRecords || 1)) * 100)}%` }}
                                             />
-                                        </button>
-                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                            Cancelar
                                         </span>
-                                    </div>
+                                    </span>
+                                );
+                            const s = batchStatus(row);
+                            return (
+                                <Status tone={s.tone} live={row.status === "PENDING"}>
+                                    {s.label}
+                                </Status>
+                            );
+                        },
+                    },
+                    {
+                        header: <span className="sr-only">Acciones</span>,
+                        key: "actions",
+                        render: (row) => (
+                            <div className="flex items-center justify-end gap-3">
+                                {row.status === "COMPLETED" && row.processed > row.errorsCount && (
+                                    <ActionLink onClick={() => openDetail(row._id, "results")}>Resultados</ActionLink>
                                 )}
-                                {row.status === "CANCELED" && (
-                                    <>
-                                        <div className="relative group">
-                                            <button
-                                                onClick={() =>
-                                                    handleReschedule(row._id)
-                                                }
-                                                className="bg-yellow-500 hover:bg-yellow-600 p-2 rounded-xl"
-                                            >
-                                                <img
-                                                    src={calendarioIcon}
-                                                    className="w-5 h-5"
-                                                />
-                                            </button>
-                                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                                Cambiar fecha
-                                            </span>
-                                        </div>
-                                        <div className="relative group">
-                                            <button
-                                                onClick={() =>
-                                                    sendDelete(row._id)
-                                                }
-                                                className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-xl"
-                                            >
-                                                <img
-                                                    src={basuraIcon}
-                                                    className="w-5 h-5"
-                                                />
-                                            </button>
-                                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                                Eliminar
-                                            </span>
-                                        </div>
-                                    </>
+                                {row.status === "COMPLETED" && row.errorsCount > 0 && (
+                                    <ActionLink onClick={() => openDetail(row._id, "errors")}>Errores</ActionLink>
                                 )}
-                                {row.status === "COMPLETED" && (
-                                    <>
-                                        {row.processed > row.errorsCount && (
-                                            <div className="relative group">
-                                                <button
-                                                    onClick={() =>
-                                                        getResults(row._id)
-                                                    }
-                                                    className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-xl"
-                                                >
-                                                    <img
-                                                        src={confirmacionIcon}
-                                                        className="w-5 h-5"
-                                                    />
-                                                </button>
-                                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                                    Ver resultados
-                                                </span>
-                                            </div>
-                                        )}
-                                        {row.errorsCount > 0 && (
-                                            <div className="relative group">
-                                                <button
-                                                    onClick={() =>
-                                                        getErrors(row._id)
-                                                    }
-                                                    className="bg-yellow-600 hover:bg-yellow-700 text-white p-2 rounded-xl"
-                                                >
-                                                    <img
-                                                        src={exclamacionIcon}
-                                                        className="w-5 h-5"
-                                                    />
-                                                </button>
-                                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                                    Ver errores
-                                                </span>
-                                            </div>
-                                        )}
-                                        <div className="relative group">
-                                            <button
-                                                onClick={() =>
-                                                    sendDelete(row._id)
-                                                }
-                                                className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-xl"
-                                            >
-                                                <img
-                                                    src={basuraIcon}
-                                                    className="w-5 h-5"
-                                                />
-                                            </button>
-                                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                                Eliminar
-                                            </span>
-                                        </div>
-                                    </>
+                                {canManageBatch(user, row) && (isEditable(row) || row.status === "CANCELED") && (
+                                    <ActionLink onClick={() => handleReschedule(row._id)}>Cambiar fecha</ActionLink>
+                                )}
+                                {canManageBatch(user, row) && isEditable(row) && (
+                                    <ActionLink tone="danger" onClick={() => handleCancel(row._id)}>
+                                        Cancelar
+                                    </ActionLink>
+                                )}
+                                {canDelete && (row.status === "CANCELED" ||
+                                    (row.status === "COMPLETED" && row.errorsCount === row.totalRecords)) && (
+                                    <ActionLink tone="danger" onClick={() => handleDelete(row._id)}>
+                                        Eliminar
+                                    </ActionLink>
                                 )}
                             </div>
                         ),
@@ -460,178 +266,72 @@ const EstadoCargas = () => {
                 ]}
             />
 
-            {modal.status && (
-                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-                    <div className="bg-gray-900 w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl border border-gray-700 shadow-2xl overflow-hidden">
-                        {/* ── ERRORES ── */}
-                        {modal.type === "errors" && (
-                            <>
-                                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-                                    <div>
-                                        <h2 className="text-white font-bold text-lg">
-                                            Errores del lote
-                                        </h2>
-                                        <p className="text-gray-400 text-xs mt-0.5">
-                                            {batch.items?.length || 0} registros
-                                            con error
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={() =>
-                                            setModal({
-                                                status: false,
-                                                type: null,
-                                            })
-                                        }
-                                        className="text-gray-500 hover:text-white text-xl transition-colors"
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
-
-                                <div className="flex-1 overflow-auto px-4 py-4">
-                                    <Table
-                                        data={batch.items}
-                                        columns={[
-                                            { header: "SUA", key: "sua" },
-                                            { header: "Año", key: "year" },
-                                            {
-                                                header: "Detalle del error",
-                                                key: "errorDetail",
-                                            },
-                                        ]}
-                                    />
-                                </div>
-
-                                <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-700">
-                                    <button
-                                        onClick={() =>
-                                            downloadErrors(batch.items)
-                                        }
-                                        className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all"
-                                    >
-                                        <svg
-                                            width="14"
-                                            height="14"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                        >
-                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                                            <polyline points="7 10 12 15 17 10" />
-                                            <line
-                                                x1="12"
-                                                y1="15"
-                                                x2="12"
-                                                y2="3"
-                                            />
-                                        </svg>
-                                        Descargar errores
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            setModal({
-                                                status: false,
-                                                type: null,
-                                            })
-                                        }
-                                        className="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all"
-                                    >
-                                        Cerrar
-                                    </button>
-                                </div>
-                            </>
-                        )}
-
-                        {/* ── RESULTADOS ── */}
-                        {modal.type === "results" && (
-                            <>
-                                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-                                    <div>
-                                        <h2 className="text-white font-bold text-lg">
-                                            Resultados exitosos
-                                        </h2>
-                                        <p className="text-gray-400 text-xs mt-0.5">
-                                            {batch.items?.length || 0} registros
-                                            procesados correctamente
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={() =>
-                                            setModal({
-                                                status: false,
-                                                type: null,
-                                            })
-                                        }
-                                        className="text-gray-500 hover:text-white text-xl transition-colors"
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
-
-                                <div className="flex-1 overflow-auto px-4 py-4">
-                                    <Table
-                                        data={batch.items}
-                                        columns={[
-                                            { header: "SUA", key: "sua" },
-                                            { header: "Año", key: "year" },
-                                            {
-                                                header: "Estado",
-                                                render: () => (
-                                                    <span className="px-2 py-0.5 bg-green-900 text-green-300 border border-green-700 rounded-full text-xs font-semibold">
-                                                        Resuelto con éxito
-                                                    </span>
-                                                ),
-                                            },
-                                        ]}
-                                    />
-                                </div>
-
-                                <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-700">
-                                    <button
-                                        onClick={() =>
-                                            downloadResults(batch.items)
-                                        }
-                                        className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all"
-                                    >
-                                        <svg
-                                            width="14"
-                                            height="14"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                        >
-                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                                            <polyline points="7 10 12 15 17 10" />
-                                            <line
-                                                x1="12"
-                                                y1="15"
-                                                x2="12"
-                                                y2="3"
-                                            />
-                                        </svg>
-                                        Descargar resultados
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            setModal({
-                                                status: false,
-                                                type: null,
-                                            })
-                                        }
-                                        className="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all"
-                                    >
-                                        Cerrar
-                                    </button>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
+            {detail && (
+                <Dialog
+                    width="max-w-2xl"
+                    title={detail === "errors" ? "Errores del lote" : "Resultados del lote"}
+                    description={
+                        detail === "errors"
+                            ? `${items.length} solicitudes con error`
+                            : `${okCount} de ${items.length} procesadas correctamente`
+                    }
+                    onClose={() => setDetail(null)}
+                    footer={
+                        <>
+                            <Button onClick={() => setDetail(null)}>Cerrar</Button>
+                            <Button
+                                variant="primary"
+                                onClick={() =>
+                                    detail === "errors"
+                                        ? downloadCsv(
+                                              items.map((i) => ({ id: itemRequestId(i), detalle_error: i.errorDetail || "" })),
+                                              "errores_lote.csv",
+                                          )
+                                        : downloadCsv(
+                                              items.map((i) => ({
+                                                  id: itemRequestId(i),
+                                                  estado: i.status === "SUCCESS" ? "OK" : i.status,
+                                                  detalle_error: i.errorDetail || "",
+                                              })),
+                                              "resultados_lote.csv",
+                                          )
+                                }
+                            >
+                                Descargar CSV
+                            </Button>
+                        </>
+                    }
+                >
+                    <Table
+                        data={items}
+                        columns={
+                            detail === "errors"
+                                ? [
+                                      { header: "Id solicitud", render: (i) => <span className="font-mono">{itemRequestId(i)}</span> },
+                                      {
+                                          header: "Detalle",
+                                          render: (i) => <span className="whitespace-normal text-muted">{i.errorDetail}</span>,
+                                      },
+                                  ]
+                                : [
+                                      { header: "Id solicitud", render: (i) => <span className="font-mono">{itemRequestId(i)}</span> },
+                                      {
+                                          header: "Resultado",
+                                          render: (i) =>
+                                              i.status === "SUCCESS" ? (
+                                                  <Status tone="ok">{okLabel}</Status>
+                                              ) : (
+                                                  <span title={i.errorDetail}>
+                                                      <Status tone="danger">Error</Status>
+                                                  </span>
+                                              ),
+                                      },
+                                  ]
+                        }
+                    />
+                </Dialog>
             )}
-        </div>
+        </Page>
     );
 };
 
