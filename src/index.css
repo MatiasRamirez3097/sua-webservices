@@ -1,66 +1,300 @@
 @import "tailwindcss";
 
+/*
+ * Tokens de diseño. Los componentes usan SOLO estas clases semánticas
+ * (bg-canvas, bg-surface, text-ink, text-muted, border-line, bg-accent...)
+ * en lugar de colores sueltos, para que la app se vea consistente.
+ *
+ * Estilo: sobrio y formal con identidad propia. Neutros levemente fríos
+ * (tinte violeta), un acento violeta para acciones y estados activos, y
+ * superficies "noche" (barra superior, login) que le dan presencia.
+ * Bordes finos, sin degradados decorativos.
+ */
+@theme {
+  --font-sans: "IBM Plex Sans", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+  --color-canvas: #eeedf5;        /* fondo de la página */
+  --color-surface: #ffffff;       /* tarjetas, tablas, formularios */
+  --color-subtle: #f1f0f7;        /* encabezados de tabla, zonas secundarias */
+  --color-line: #e2e1ec;          /* bordes */
+  --color-line-strong: #c7c5d9;
+  --color-ink: #1c1b2e;           /* texto principal */
+  --color-muted: #5e5c74;         /* texto secundario */
+  --color-faint: #8e8ca4;         /* texto terciario / placeholders */
+
+  --color-accent: #5a46d4;        /* violeta: acción principal, enlaces, activo */
+  --color-accent-hover: #4836b6;
+  --color-accent-soft: #eeebfc;
+  --color-accent-line: #d4cdf7;
+  --color-accent-bright: #a394ff; /* acento sobre fondos oscuros */
+
+  /* Superficies oscuras (barra superior, panel del login) */
+  --color-night: #18172b;
+  --color-night-raised: #232140;
+  --color-night-deep: #0b0a17;   /* footer */
+  --color-night-line: #312e52;
+  --color-night-text: #e9e7f7;
+  --color-night-muted: #a19fbd;
+
+  --color-ok: #1f7a4a;
+  --color-ok-soft: #e6f2eb;
+  --color-warn: #9a5b06;
+  --color-warn-soft: #fbf1e2;
+  --color-danger: #b42318;
+  --color-danger-hover: #951c13;
+  --color-danger-soft: #fbeae8;
+  --color-danger-strong: #b42318; /* fondo de botones destructivos (texto blanco) */
+
+  /* Color secundario: archivos y cargas (CSV) */
+  --color-teal: #0f8a7e;
+  --color-teal-soft: #e3f4f1;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+}
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  color-scheme: light;
+  color: var(--color-ink);
+  background-color: var(--color-canvas);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+/* Base algo más grande: todo lo que usa rem (texto, espaciados, alturas) escala */
+html {
+  font-size: 106.25%; /* 17px */
 }
-a:hover {
-  color: #535bf2;
+
+/*
+ * Tema oscuro de la aplicación (todo menos el login). Layout agrega la clase
+ * .theme-dark al <html> cuando hay sesión; los mismos tokens cambian de valor,
+ * así que los componentes no necesitan saber en qué tema están.
+ */
+html.theme-dark {
+  color-scheme: dark;
+  --color-canvas: #19143a;
+  --color-surface: #221c47;
+  --color-subtle: #2a2353;
+  --color-line: #372e66;
+  --color-line-strong: #4b4185;
+  --color-ink: #eceaf8;
+  --color-muted: #aaa8c7;
+  --color-faint: #7d7b9e;
+
+  --color-accent: #6f5cf2;
+  --color-accent-hover: #5e4ae0;
+  --color-accent-soft: #322a6b;
+  --color-accent-line: #5a4fb0;
+  --color-accent-bright: #a99bff;
+
+  --color-ok: #5fd39a;
+  --color-ok-soft: #16302a;
+  --color-warn: #f2b45a;
+  --color-warn-soft: #33291a;
+  --color-danger: #ff8a80;
+  --color-danger-hover: #c93a2e;
+  --color-danger-soft: #3a1f29;
+  --color-danger-strong: #d64538;
+
+  --color-teal: #4fd6c4;
+  --color-teal-soft: #173a45;
+}
+/* Los enlaces/acciones "accent" en texto se ven mejor en el violeta claro */
+html.theme-dark .text-accent {
+  color: var(--color-accent-bright);
+}
+html.theme-dark .swal2-popup {
+  background: var(--color-surface);
+  color: var(--color-ink);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--color-canvas);
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+a {
+  color: inherit;
+  text-decoration: inherit;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+button:not(:disabled),
+[role="button"]:not(:disabled),
+label[for] {
+  cursor: pointer;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    /*background-color: #ffffff;*/
+/* Foco visible y consistente para navegación con teclado */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Números alineados en tablas y contadores */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+}
+
+/* ── SweetAlert2: diálogos con el mismo lenguaje visual ── */
+.swal2-popup.sua-dialog {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-line);
+  padding: 0;
+  width: min(30rem, calc(100vw - 2rem));
+  font-family: var(--font-sans);
+}
+.swal2-popup.sua-dialog .swal2-html-container {
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+.swal2-popup.sua-dialog .swal2-actions {
+  margin: 0;
+  padding: 0.75rem 1.25rem 1.25rem;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+}
+.swal2-popup.sua-dialog .swal2-validation-message {
+  margin: 0 1.25rem;
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  font-size: 0.875rem;
+}
+
+/* Trama técnica sutil del panel del login: grilla fina + halo violeta */
+.login-grid {
+  background-image:
+    radial-gradient(60rem 30rem at 85% 110%, rgb(90 70 212 / 0.35), transparent 60%),
+    linear-gradient(to right, rgb(255 255 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.045) 1px, transparent 1px);
+  background-size: auto, 32px 32px, 32px 32px;
+}
+
+::selection {
+  background: var(--color-accent-line);
+  color: var(--color-ink);
+}
+
+/* ── Encabezado de página (hero) ─────────────────────────────────────────── */
+.hero-texture {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(to bottom, black 30%, transparent);
+}
+/* Halo violeta que deriva lentamente: da vida sin distraer */
+.hero-glow {
+  position: absolute;
+  width: 46rem;
+  height: 22rem;
+  right: -8rem;
+  top: -10rem;
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, rgb(124 104 255 / 0.38), transparent);
+  filter: blur(8px);
+  animation: drift 18s ease-in-out infinite alternate;
+}
+.hero-glow.second {
+  left: -12rem;
+  right: auto;
+  top: auto;
+  bottom: -14rem;
+  width: 36rem;
+  background: radial-gradient(closest-side, rgb(64 140 255 / 0.18), transparent);
+  animation-duration: 24s;
+  animation-direction: alternate-reverse;
+}
+@keyframes drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(-6rem, 3rem, 0) scale(1.12); }
+}
+
+/* ── Entradas ───────────────────────────────────────────────────────────── */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes pop {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+/* Uso: className="anim-rise" style={{ "--i": n }} → escalonado de 45ms */
+.anim-rise {
+  animation: rise 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+.anim-fade { animation: fade 180ms ease-out both; }
+.anim-pop  { animation: pop 220ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+/* Tarjetas: elevación suave al pasar el mouse */
+.card-lift {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -12px rgb(60 40 160 / 0.28);
+}
+
+/* Punto de estado "en vivo" */
+@keyframes ping-soft {
+  0%   { transform: scale(1); opacity: 0.55; }
+  80%, 100% { transform: scale(2.6); opacity: 0; }
+}
+.live-dot { position: relative; }
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: ping-soft 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Barra de progreso indeterminada / en curso */
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+.bar-shimmer {
+  background-image: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.55), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+/* Zona de contenido: violeta propio + halos suaves, distinto del encabezado y el footer */
+.app-content {
+  background:
+    radial-gradient(60rem 28rem at 8% 0%, rgb(124 104 255 / 0.16), transparent 65%),
+    radial-gradient(48rem 30rem at 100% 55%, rgb(79 214 196 / 0.06), transparent 65%),
+    var(--color-canvas);
 }

@@ -1,23 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { server } from "../../../Api";
-import { ls } from "../../../utils/ls.js";
+import { apiErrorMessage, server } from "../../../Api";
+
+// El token lo agrega el interceptor de Api.jsx
 
 export const cancelBatch = createAsyncThunk(
     "sua/cancelBatch",
     async (id, { rejectWithValue }) => {
         try {
-            const token = ls.getText("token");
-
-            const res = await server.patch(`/batches/cancel/${id}`, null, {
-                headers: {
-                    Authorization: "Bearer " + token,
-                },
-            });
+            const res = await server.patch(`/batches/cancel/${id}`);
             return res.data.response;
         } catch (error) {
-            return rejectWithValue(
-                error.response?.data?.message || error.message,
-            );
+            return rejectWithValue(apiErrorMessage(error, "No se pudo cancelar."));
         }
     },
 );
@@ -26,19 +19,10 @@ export const getBatches = createAsyncThunk(
     "sua/getBatches",
     async (_, { rejectWithValue }) => {
         try {
-            const token = ls.getText("token");
-
-            const res = await server.get("/batches", {
-                headers: {
-                    Authorization: "Bearer " + token,
-                },
-            });
-            console.log(res.data);
+            const res = await server.get("/batches");
             return res.data.response;
         } catch (error) {
-            return rejectWithValue(
-                error.response?.data?.message || error.message,
-            );
+            return rejectWithValue(apiErrorMessage(error));
         }
     },
 );
@@ -50,52 +34,49 @@ export const getOneBatch = createAsyncThunk(
         { rejectWithValue },
     ) => {
         try {
-            const token = ls.getText("token");
-
             const res = await server.get(`/batches/getone/${id}`, {
-                headers: {
-                    Authorization: "Bearer " + token,
-                },
                 params: {
-                    fields: fields ? fields : "",
-                    itemsFields: itemsFields ? itemsFields : "",
-                    onlyErrors: onlyErrors,
+                    fields: fields || "",
+                    itemsFields: itemsFields || "",
+                    onlyErrors,
                 },
             });
             return res.data.response;
         } catch (error) {
-            return rejectWithValue(
-                error.response?.data?.message || error.message,
-            );
+            return rejectWithValue(apiErrorMessage(error));
         }
     },
 );
 
+/**
+ * Crea un lote.
+ *  - RESOLUCION: { type, idArea, resolutionDate, scheduledFor, legend, records }
+ *  - DERIVACION: { type, idAreaDerivada, scheduledFor, legend, records }
+ * records: [{ id: "123456" }, ...]
+ */
 export const postBatches = createAsyncThunk(
     "sua/postBatches",
     async (
-        { type, resolutionDate, idArea, scheduledFor, data, records },
+        { type, resolutionDate, idArea, idAreaDerivada, scheduledFor, legend, records },
         { rejectWithValue },
     ) => {
         try {
             const payload = {
-                idArea: idArea,
-                type: type,
-                date: resolutionDate,
-                scheduledFor: scheduledFor,
-                data: data,
-                records: records,
+                type,
+                scheduledFor,
+                data: { legend },
+                records,
             };
+            if (type === "RESOLUCION") {
+                payload.idArea = Number(idArea);
+                payload.date = resolutionDate;
+            } else {
+                payload.data.idAreaDerivada = Number(idAreaDerivada);
+            }
             const res = await server.post(`/batches`, payload);
-            return res.data.response;
-        } catch (err) {
-            const msg = err.response?.data?.detail || "Error desconocido";
-
-            return rejectWithValue({
-                sua,
-                anio,
-                err: msg,
-            });
+            return res.data;
+        } catch (error) {
+            return rejectWithValue(apiErrorMessage(error, "No se pudo crear el lote."));
         }
     },
 );
@@ -105,13 +86,11 @@ export const rescheduleBatch = createAsyncThunk(
     async ({ id, newDate }, { rejectWithValue }) => {
         try {
             const res = await server.patch(`/batches/reschedule/${id}`, {
-                newDate,
+                newDate: new Date(newDate).toISOString(),
             });
             return res.data.response;
         } catch (error) {
-            return rejectWithValue(
-                error.response?.data?.message || error.message,
-            );
+            return rejectWithValue(apiErrorMessage(error, "No se pudo reprogramar."));
         }
     },
 );
@@ -123,44 +102,24 @@ export const deleteOneBatch = createAsyncThunk(
             const res = await server.delete(`/batches/deleteone/${id}`);
             return res.data.response;
         } catch (error) {
-            return rejectWithValue(
-                error.response?.data?.message || error.message,
-            );
+            return rejectWithValue(apiErrorMessage(error, "No se pudo eliminar el lote."));
         }
     },
 );
+
+const replaceInList = (list, updated) =>
+    updated ? list.map((b) => (b._id === updated._id ? updated : b)) : list;
 
 const batchSlice = createSlice({
     name: "batches",
     initialState: {
         batch: {},
-        executionDate: "",
-        idArea: 2098,
-        legend: "",
         list: [],
         loading: false,
         loadingBatch: false,
-        newExecutionDate: "",
-        resolutionDate: "",
-        type: "RESOLUCION",
+        error: null,
     },
-    reducers: {
-        setExecutionDate: (state, action) => {
-            state.executionDate = action.payload;
-        },
-        setIdArea: (state, action) => {
-            state.idArea = action.payload;
-        },
-        setLegend: (state, action) => {
-            state.legend = action.payload;
-        },
-        setNewExecutionDate: (state, action) => {
-            state.newExecutionDate = action.payload;
-        },
-        setResolutionDate: (state, action) => {
-            state.resolutionDate = action.payload;
-        },
-    },
+    reducers: {},
     extraReducers: (builder) => {
         builder
             .addCase(getBatches.pending, (state) => {
@@ -168,7 +127,8 @@ const batchSlice = createSlice({
             })
             .addCase(getBatches.fulfilled, (state, action) => {
                 state.loading = false;
-                state.list = action.payload;
+                state.list = action.payload || [];
+                state.error = null;
             })
             .addCase(getBatches.rejected, (state, action) => {
                 state.loading = false;
@@ -176,45 +136,26 @@ const batchSlice = createSlice({
             })
             .addCase(getOneBatch.pending, (state) => {
                 state.loadingBatch = true;
-                state.error = false;
+                state.error = null;
             })
             .addCase(getOneBatch.fulfilled, (state, action) => {
-                state.loading = false;
-                state.batch = action.payload;
-                state.error = false;
+                state.loadingBatch = false;
+                state.batch = action.payload || {};
             })
             .addCase(getOneBatch.rejected, (state, action) => {
-                state.loading = false;
+                state.loadingBatch = false;
                 state.error = action.payload;
             })
             .addCase(cancelBatch.fulfilled, (state, action) => {
-                const updated = action.payload;
-                state.list = state.list.map((batch) =>
-                    batch._id === updated._id ? updated : batch,
-                );
+                state.list = replaceInList(state.list, action.payload);
             })
             .addCase(rescheduleBatch.fulfilled, (state, action) => {
-                const updated = action.payload;
-
-                state.list = state.list.map((batch) =>
-                    batch._id === updated._id ? updated : batch,
-                );
+                state.list = replaceInList(state.list, action.payload);
             })
             .addCase(deleteOneBatch.fulfilled, (state, action) => {
-                const deletedId = action.meta.arg;
-
-                state.list = state.list.filter(
-                    (batch) => batch._id !== deletedId,
-                );
+                state.list = state.list.filter((b) => b._id !== action.meta.arg);
             });
     },
 });
 
-export const {
-    setIdArea,
-    setLegend,
-    setExecutionDate,
-    setNewExecutionDate,
-    setResolutionDate,
-} = batchSlice.actions;
 export default batchSlice.reducer;

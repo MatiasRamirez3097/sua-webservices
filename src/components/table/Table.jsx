@@ -1,45 +1,44 @@
-import React from "react";
+import { EmptyState } from "../ui/ui";
+import { rise } from "../ui/styles";
 
-const Table = ({ columns, data }) => {
-    if (!data || data.length === 0) {
-        return (
-            <div className="p-4 text-center text-gray-400 bg-gray-800 rounded">
-                No hay registros para mostrar.
-            </div>
-        );
-    }
+/**
+ * Tabla de datos. Cada columna puede indicar `align: "right"` (números)
+ * y `className` para ajustar el ancho.
+ */
+const Table = ({ columns, data, empty = "No hay registros para mostrar." }) => {
+    if (!data || data.length === 0) return <EmptyState>{empty}</EmptyState>;
+
+    const alignClass = (col) =>
+        col.align === "right" ? "text-right tabular" : col.align === "center" ? "text-center" : "text-left";
 
     return (
-        <div className="w-full rounded-lg shadow border border-gray-700 mt-6 overflow-x-auto overflow-y-auto max-h-[70vh]">
-            <table className="w-full min-w-max border text-center border-gray-600 border-collapse text-white">
-                <thead className="bg-gray-700 text-gray-300 border-b border-gray-600 sticky top-0 z-10">
+        <div className="anim-fade w-full overflow-auto max-h-[70vh] rounded-lg border border-line bg-surface shadow-[0_1px_2px_rgb(24_23_43/0.04)]">
+            <table className="w-full border-collapse text-sm text-ink">
+                <thead className="sticky top-0 z-10 bg-subtle">
                     <tr>
                         {columns.map((col) => (
                             <th
                                 key={col.key || col.header}
-                                className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider border-x border-gray-600 whitespace-nowrap"
+                                scope="col"
+                                className={`border-b border-line px-4 py-3 text-sm font-medium text-muted whitespace-nowrap ${alignClass(col)} ${col.className ?? ""}`}
                             >
                                 {col.header}
                             </th>
                         ))}
                     </tr>
                 </thead>
-                <tbody className="text-white">
+                <tbody>
                     {data.map((row, index) => (
                         <tr
                             key={row._id ?? index}
-                            className={`${
-                                index % 2 === 0 ? "bg-gray-800" : "bg-gray-900"
-                            } hover:bg-gray-700 transition-colors`}
+                            {...rise(index, "group border-b border-line last:border-b-0 transition-colors hover:bg-accent-soft/50")}
                         >
                             {columns.map((col, colIndex) => (
                                 <td
                                     key={col.key || colIndex}
-                                    className="px-3 py-2 border-x border-gray-700 text-center text-sm whitespace-nowrap"
+                                    className={`px-4 py-3 align-middle whitespace-nowrap ${alignClass(col)} ${col.className ?? ""}`}
                                 >
-                                    {col.render
-                                        ? col.render(row)
-                                        : row[col.key]}
+                                    {col.render ? col.render(row) : row[col.key]}
                                 </td>
                             ))}
                         </tr>

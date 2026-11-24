@@ -1,540 +1,294 @@
-import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import Papa from "papaparse";
-import {
-    postBatches,
-    setIdArea,
-    setLegend,
-    setExecutionDate,
-    setResolutionDate,
-} from "../../redux/slices/sua/batchSlice";
-import { CsvProcessor, Input, Label, Select, TextArea } from "../../components";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { Link } from "react-router-dom";
+import { postBatches } from "../../redux/slices/sua/batchSlice";
+import { CsvProcessor, Input, Select, TextArea } from "../../components";
+import { Button, Field, Page, Tabs } from "../../components/ui/ui";
 import { sweetAlert } from "../../components/alerts/SweetAlert";
+import { parseRequestCsv } from "../../utils/parseRequestCsv";
 
-// ─── Constantes ───────────────────────────────────────────────────────────────
 const AREAS = [
-    { value: 2098, text: "Parques y Paseos" },
-    { value: 2115, text: "Parques y Paseos futuras planificaciones" },
+    { value: 2098, text: "Parques y Paseos (2098)" },
+    { value: 2115, text: "Parques y Paseos, futuras planificaciones (2115)" },
+];
+const OTHER_AREA = "other";
+const LEGEND_MAX = 2000;
+
+const TABS = [
+    { id: "RESOLUCION", label: "Resolución" },
+    { id: "DERIVACION", label: "Derivación" },
 ];
 
-// ─── Componente de sección con título ────────────────────────────────────────
-const Section = ({ title, subtitle, children }) => (
-    <div className="bg-gray-800/60 border border-gray-700 rounded-2xl p-6 space-y-4">
-        {(title || subtitle) && (
-            <div className="pb-3 border-b border-gray-700">
-                {title && (
-                    <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                        {title}
-                    </h3>
-                )}
-                {subtitle && (
-                    <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
-                )}
-            </div>
-        )}
-        {children}
+const nowLocal = () => {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+};
+
+/** Bloque del formulario: título a la izquierda, campos a la derecha. */
+const FormRow = ({ title, help, children }) => (
+    <div className="group/row relative grid gap-4 border-b border-line px-6 py-7 transition-colors last:border-b-0 focus-within:bg-accent-soft/30 md:grid-cols-[15rem_1fr] md:gap-10">
+        <span
+            aria-hidden="true"
+            className="absolute inset-y-4 left-0 w-0.5 rounded-full bg-accent opacity-0 transition-opacity group-focus-within/row:opacity-100"
+        />
+        <div>
+            <h2 className="text-sm font-semibold text-ink transition-colors group-focus-within/row:text-accent">{title}</h2>
+            {help && <p className="mt-1 text-sm leading-relaxed text-muted">{help}</p>}
+        </div>
+        <div className="min-w-0 space-y-4">{children}</div>
     </div>
 );
 
-// ─── Componente principal ─────────────────────────────────────────────────────
-const GestionSua = () => {
-    const dispatch = useDispatch();
-    const { errors, idArea, legend, executionDate, resolutionDate } =
-        useSelector((store) => store.batches);
+const AreaPicker = ({ id, label, value, onChange }) => {
+    const isPreset = AREAS.some((a) => String(a.value) === String(value));
+    const [custom, setCustom] = useState(!isPreset && value !== "");
 
-    const [activeTab, setActiveTab] = useState("resoluciones");
-
-    // Estado resoluciones
-    const [resFile, setResFile] = useState(null);
-    const [resJsonData, setResJsonData] = useState([]);
-    const [resHeaders, setResHeaders] = useState([]);
-    const [resStatus, setResStatus] = useState("");
-    const [resRowStatus, setResRowStatus] = useState({});
-
-    // Estado derivaciones
-    const [derFile, setDerFile] = useState(null);
-    const [derJsonData, setDerJsonData] = useState([]);
-    const [derHeaders, setDerHeaders] = useState([]);
-    const [derStatus, setDerStatus] = useState("");
-    const [derRowStatus, setDerRowStatus] = useState({});
-    const [idAreaDerivada, setIdAreaDerivada] = useState(2098);
-
-    const onChange = (e) => {
-        if (e.target.name === "legend") dispatch(setLegend(e.target.value));
-        else if (e.target.name === "resolutionDate")
-            dispatch(setResolutionDate(e.target.value));
-        else if (e.target.name === "executionDate")
-            dispatch(setExecutionDate(e.target.value));
-        else if (e.target.name === "idArea")
-            dispatch(setIdArea(e.target.value));
-    };
-
-    const resetForm = () => {
-        dispatch(setLegend(""));
-        dispatch(setResolutionDate(""));
-        dispatch(setExecutionDate(""));
-    };
-
-    const isFormComplete = () =>
-        legend?.trim() !== "" &&
-        resolutionDate !== "" &&
-        executionDate !== "" &&
-        idArea;
-
-    const isDerivacionFormComplete = () => isFormComplete() && idAreaDerivada;
-
-    // ─── Handlers Resoluciones ────────────────────────────────────────────────
-    const handleResFileChange = (e) => {
-        setResFile(e.target.files[0]);
-        setResJsonData([]);
-        setResHeaders([]);
-        setResStatus("");
-        setResRowStatus({});
-    };
-
-    const handleResParse = () => {
-        if (!resFile)
-            return sweetAlert.fire({
-                type: "warning",
-                title: "Archivo requerido",
-                message: "Debe seleccionar un archivo CSV.",
-            });
-        Papa.parse(resFile, {
-            header: true,
-            skipEmptyLines: true,
-            complete: (results) => {
-                if (!results.data.length)
-                    return sweetAlert.fire({
-                        type: "warning",
-                        title: "Archivo vacío",
-                        message: "El archivo no contiene registros válidos.",
-                    });
-                setResJsonData(results.data);
-                setResHeaders(results.meta.fields);
-                sweetAlert.fire({
-                    type: "success",
-                    title: "Archivo cargado",
-                    message: `Se cargaron ${results.data.length} registros.`,
-                });
-            },
-            error: () =>
-                sweetAlert.fire({
-                    type: "error",
-                    title: "Error",
-                    message: "No se pudo leer el archivo CSV.",
-                }),
-        });
-    };
-
-    const handleResDescargarErrores = () => {
-        if (!errors?.length) return;
-        const link = document.createElement("a");
-        link.setAttribute(
-            "href",
-            URL.createObjectURL(
-                new Blob([Papa.unparse(errors)], {
-                    type: "text/csv;charset=utf-8;",
-                }),
-            ),
-        );
-        link.setAttribute("download", "errores_resoluciones.csv");
-        link.style.visibility = "hidden";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-
-    const handleResProcessAPI = async () => {
-        if (!isFormComplete())
-            return sweetAlert.fire({
-                type: "warning",
-                title: "Formulario incompleto",
-                message: "Completá todos los campos obligatorios.",
-            });
-        if (!resJsonData.length)
-            return sweetAlert.fire({
-                type: "info",
-                title: "Sin datos",
-                message: "Cargá un archivo CSV primero.",
-            });
-
-        const confirm = await sweetAlert.fire({
-            type: "question",
-            title: "¿Confirmar procesamiento?",
-            message: "Se agendarán las resoluciones cargadas.",
-            showCancelButton: true,
-            confirmButtonText: "Sí, procesar",
-            cancelButtonText: "Cancelar",
-        });
-        if (!confirm.isConfirmed) return;
-
-        setResStatus("Procesando...");
-        try {
-            await dispatch(
-                postBatches({
-                    idArea,
-                    type: "RESOLUCION",
-                    resolutionDate,
-                    scheduledFor: executionDate,
-                    data: { legend, tipoResolucion: 1, id_motivo_cierre: 0 },
-                    records: resJsonData,
-                }),
-            ).unwrap();
-
-            sweetAlert.fire({
-                type: "success",
-                title: "Proceso exitoso",
-                message: "Las resoluciones fueron agendadas correctamente.",
-            });
-            setResStatus("Agendado correctamente");
-            setResFile(null);
-            setResJsonData([]);
-            setResHeaders([]);
-            setResRowStatus({});
-            const input = document.getElementById("res-file-upload");
-            if (input) input.value = "";
-            resetForm();
-        } catch (error) {
-            sweetAlert.fire({
-                type: "error",
-                title: "Error al procesar",
-                message: error?.message || "Ocurrió un error.",
-            });
-            setResStatus("Error en el procesamiento");
-        }
-    };
-
-    // ─── Handlers Derivaciones ────────────────────────────────────────────────
-    const handleDerFileChange = (e) => {
-        setDerFile(e.target.files[0]);
-        setDerJsonData([]);
-        setDerHeaders([]);
-        setDerStatus("");
-        setDerRowStatus({});
-    };
-
-    const handleDerParse = () => {
-        if (!derFile)
-            return sweetAlert.fire({
-                type: "warning",
-                title: "Archivo requerido",
-                message: "Debe seleccionar un archivo CSV.",
-            });
-        Papa.parse(derFile, {
-            header: true,
-            skipEmptyLines: true,
-            complete: (results) => {
-                if (!results.data.length)
-                    return sweetAlert.fire({
-                        type: "warning",
-                        title: "Archivo vacío",
-                        message: "El archivo no contiene registros válidos.",
-                    });
-                setDerJsonData(results.data);
-                setDerHeaders(results.meta.fields);
-                sweetAlert.fire({
-                    type: "success",
-                    title: "Archivo cargado",
-                    message: `Se cargaron ${results.data.length} registros.`,
-                });
-            },
-            error: () =>
-                sweetAlert.fire({
-                    type: "error",
-                    title: "Error",
-                    message: "No se pudo leer el archivo CSV.",
-                }),
-        });
-    };
-
-    const handleDerDescargarErrores = () => {
-        if (!errors?.length) return;
-        const link = document.createElement("a");
-        link.setAttribute(
-            "href",
-            URL.createObjectURL(
-                new Blob([Papa.unparse(errors)], {
-                    type: "text/csv;charset=utf-8;",
-                }),
-            ),
-        );
-        link.setAttribute("download", "errores_derivaciones.csv");
-        link.style.visibility = "hidden";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-
-    const handleDerProcessAPI = async () => {
-        if (!isDerivacionFormComplete())
-            return sweetAlert.fire({
-                type: "warning",
-                title: "Formulario incompleto",
-                message:
-                    "Completá todos los campos incluyendo área de destino.",
-            });
-        if (!derJsonData.length)
-            return sweetAlert.fire({
-                type: "info",
-                title: "Sin datos",
-                message: "Cargá un archivo CSV primero.",
-            });
-
-        const confirm = await sweetAlert.fire({
-            type: "question",
-            title: "¿Confirmar procesamiento?",
-            message: "Se agendarán las derivaciones cargadas.",
-            showCancelButton: true,
-            confirmButtonText: "Sí, procesar",
-            cancelButtonText: "Cancelar",
-        });
-        if (!confirm.isConfirmed) return;
-
-        setDerStatus("Procesando...");
-        try {
-            await dispatch(
-                postBatches({
-                    idArea,
-                    type: "DERIVACION",
-                    resolutionDate,
-                    scheduledFor: executionDate,
-                    data: {
-                        legend,
-                        tipoResolucion: 2,
-                        id_motivo_cierre: 0,
-                        id_area_derivada: idAreaDerivada,
-                    },
-                    records: derJsonData,
-                }),
-            ).unwrap();
-
-            sweetAlert.fire({
-                type: "success",
-                title: "Proceso exitoso",
-                message: "Las derivaciones fueron agendadas correctamente.",
-            });
-            setDerStatus("Agendado correctamente");
-            setDerFile(null);
-            setDerJsonData([]);
-            setDerHeaders([]);
-            setDerRowStatus({});
-            const input = document.getElementById("der-file-upload");
-            if (input) input.value = "";
-            resetForm();
-        } catch (error) {
-            sweetAlert.fire({
-                type: "error",
-                title: "Error al procesar",
-                message: error?.message || "Ocurrió un error.",
-            });
-            setDerStatus("Error en el procesamiento");
-        }
-    };
-
-    // ─── Render ───────────────────────────────────────────────────────────────
     return (
-        <div className="w-full max-w-4xl mx-auto space-y-6">
-            {/* Header */}
-            <div className="bg-gray-800/60 border border-gray-700 rounded-2xl p-6">
-                <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-white tracking-widest uppercase">
-                        Gestión SUA
-                    </h1>
-                    <p className="text-gray-400 text-sm mt-1">
-                        Procesamiento masivo de resoluciones y derivaciones
+        <Field label={label} htmlFor={id} required>
+            <Select
+                id={id}
+                value={custom ? OTHER_AREA : value}
+                onChange={(e) => {
+                    const v = e.target.value;
+                    setCustom(v === OTHER_AREA);
+                    onChange(v === OTHER_AREA ? "" : v);
+                }}
+                options={[...AREAS, { value: OTHER_AREA, text: "Otra área (ingresar id)" }]}
+            />
+            {custom && (
+                <Input
+                    type="number"
+                    min="1"
+                    step="1"
+                    placeholder="Id del área"
+                    aria-label="Id del área"
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    className="mt-2 block h-9 w-40 rounded-md border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+            )}
+        </Field>
+    );
+};
+
+const ProcessForm = ({ type }) => {
+    const dispatch = useDispatch();
+    const isResolution = type === "RESOLUCION";
+    const fileInputId = `${type.toLowerCase()}-file-upload`;
+
+    const [legend, setLegend] = useState("");
+    const [resolutionDate, setResolutionDate] = useState("");
+    const [executionDate, setExecutionDate] = useState("");
+    const [area, setArea] = useState(String(AREAS[0].value));
+    const [file, setFile] = useState(null);
+    const [parsed, setParsed] = useState(null);
+    const [processing, setProcessing] = useState(false);
+    const [done, setDone] = useState(false);
+
+    const clearFile = () => {
+        setFile(null);
+        setParsed(null);
+        const input = document.getElementById(fileInputId);
+        if (input) input.value = "";
+    };
+
+    const handleFileChange = async (e) => {
+        const f = e.target.files?.[0];
+        if (!f) return;
+        setDone(false);
+        setFile(f);
+        setParsed(null);
+        try {
+            setParsed(await parseRequestCsv(f));
+        } catch (err) {
+            clearFile();
+            sweetAlert.fire({ type: "error", title: "No se pudo leer el archivo", message: err.message });
+        }
+    };
+
+    const missing = [];
+    if (!parsed?.ids.length) missing.push("archivo");
+    if (!legend.trim()) missing.push(isResolution ? "solución" : "leyenda");
+    if (!/^\d+$/.test(String(area)) || Number(area) <= 0) missing.push("área");
+    if (isResolution && !resolutionDate) missing.push("fecha de resolución");
+    if (!executionDate) missing.push("fecha de ejecución");
+    const hasInvalid = (parsed?.invalidCount ?? 0) > 0;
+    const totalSteps = isResolution ? 5 : 4;
+    const count = parsed?.ids.length ?? 0;
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (missing.length || hasInvalid) return;
+        if (new Date(executionDate) < new Date())
+            return sweetAlert.fire({
+                type: "warning",
+                title: "Fecha de ejecución vencida",
+                message: "Elegí una fecha y hora futuras.",
+            });
+
+        const areaText = AREAS.find((a) => String(a.value) === String(area))?.text || `área ${area}`;
+        const { isConfirmed } = await sweetAlert.fire({
+            type: "question",
+            title: isResolution ? "Agendar resolución" : "Agendar derivación",
+            message: `Se van a ${isResolution ? "resolver" : "derivar"} <b>${count}</b> solicitudes ${
+                isResolution ? "en" : "a"
+            } <b>${areaText}</b> el ${new Date(executionDate).toLocaleString("es-AR")}.`,
+            showCancelButton: true,
+            confirmButtonText: "Agendar",
+            cancelButtonText: "Volver",
+        });
+        if (!isConfirmed) return;
+
+        setProcessing(true);
+        try {
+            await dispatch(
+                postBatches({
+                    type,
+                    legend: legend.trim(),
+                    scheduledFor: executionDate,
+                    records: parsed.ids.map((id) => ({ id })),
+                    ...(isResolution ? { idArea: area, resolutionDate } : { idAreaDerivada: area }),
+                }),
+            ).unwrap();
+            setLegend("");
+            setResolutionDate("");
+            setExecutionDate("");
+            clearFile();
+            setDone(true);
+        } catch (error) {
+            sweetAlert.fire({
+                type: "error",
+                title: "No se pudo agendar",
+                message: typeof error === "string" ? error : "Ocurrió un error.",
+            });
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit} noValidate className="anim-rise overflow-hidden rounded-lg border border-line bg-surface shadow-[0_1px_2px_rgb(24_23_43/0.04)]">
+            {done && (
+                <div role="status" className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-ok-soft px-5 py-3 text-sm text-ok">
+                    <span>Lote agendado.</span>
+                    <Link to="/estadocargas" className="font-medium underline">
+                        Ver en Estado de cargas
+                    </Link>
+                </div>
+            )}
+
+            <FormRow
+                title="Solicitudes"
+                help="Archivo CSV con los ids de las solicitudes. Los duplicados se envían una sola vez."
+            >
+                <CsvProcessor
+                    fileInputId={fileInputId}
+                    file={file}
+                    parsed={parsed}
+                    onFileChange={handleFileChange}
+                    onClear={clearFile}
+                />
+            </FormRow>
+
+            <FormRow
+                title={isResolution ? "Solución" : "Leyenda"}
+                help={
+                    isResolution
+                        ? "Texto con el que se resuelve cada solicitud."
+                        : "Acompaña la derivación. Si la solicitud ya tiene una derivación vigente, se resuelve parcialmente con este texto y se vuelve a derivar."
+                }
+            >
+                <TextArea
+                    id={`${type}-legend`}
+                    name="legend"
+                    value={legend}
+                    maxLength={LEGEND_MAX}
+                    rows={5}
+                    onChange={(e) => setLegend(e.target.value)}
+                />
+            </FormRow>
+
+            <FormRow
+                title={isResolution ? "Área y fechas" : "Destino y ejecución"}
+                help="El lote se ejecuta en bloques de 15 minutos. Se puede cancelar o reprogramar hasta 15 minutos antes."
+            >
+                <AreaPicker
+                    id={`${type}-area`}
+                    label={isResolution ? "Área que resuelve" : "Área de destino"}
+                    value={area}
+                    onChange={setArea}
+                />
+                <div className="grid gap-4 sm:grid-cols-2">
+                    {isResolution && (
+                        <Field label="Fecha de resolución" htmlFor={`${type}-resdate`} required hint="La que figura en SUA.">
+                            <Input
+                                id={`${type}-resdate`}
+                                value={resolutionDate}
+                                onChange={(e) => setResolutionDate(e.target.value)}
+                                type="datetime-local"
+                                step="1"
+                            />
+                        </Field>
+                    )}
+                    <Field label="Ejecución" htmlFor={`${type}-execdate`} required hint="Cuándo se envía a SUA.">
+                        <Input
+                            id={`${type}-execdate`}
+                            value={executionDate}
+                            min={nowLocal()}
+                            onChange={(e) => setExecutionDate(e.target.value)}
+                            type="datetime-local"
+                        />
+                    </Field>
+                </div>
+            </FormRow>
+
+            <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 border-t border-line bg-subtle px-6 py-4">
+                <div className="mr-auto flex min-w-0 items-center gap-3">
+                    <span className="h-1.5 w-28 shrink-0 overflow-hidden rounded-full bg-line" aria-hidden="true">
+                        <span
+                            className="block h-full rounded-full bg-accent transition-[width] duration-500 ease-out"
+                            style={{ width: `${((totalSteps - missing.length) / totalSteps) * 100}%` }}
+                        />
+                    </span>
+                    <p className="truncate text-sm text-muted">
+                        {missing.length ? `Falta: ${missing.join(", ")}.` : "Listo para agendar."}
                     </p>
                 </div>
-
-                {/* Pestañas */}
-                <div className="flex gap-2 p-1 bg-gray-900/50 rounded-xl w-fit">
-                    {[
-                        { id: "resoluciones", label: "📄 Resoluciones" },
-                        { id: "derivaciones", label: "🔀 Derivaciones" },
-                    ].map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all
-                                ${
-                                    activeTab === tab.id
-                                        ? "bg-indigo-600 text-white shadow-md"
-                                        : "text-gray-400 hover:text-white hover:bg-gray-700/50"
-                                }`}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
+                <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={missing.length > 0 || hasInvalid}
+                    loading={processing}
+                >
+                    {isResolution ? "Agendar resolución" : "Agendar derivación"}
+                    {count > 0 && ` de ${count} ${count === 1 ? "solicitud" : "solicitudes"}`}
+                </Button>
             </div>
+        </form>
+    );
+};
 
-            {/* ── RESOLUCIONES ── */}
-            {activeTab === "resoluciones" && (
-                <>
-                    <Section
-                        title="Leyenda"
-                        subtitle="Texto descriptivo de la resolución"
-                    >
-                        <TextArea
-                            name="legend"
-                            onChange={onChange}
-                            placeholder="Escribe aquí la resolución..."
-                            value={legend}
-                        />
-                    </Section>
+const GestionSua = () => {
+    const [activeTab, setActiveTab] = useState("RESOLUCION");
 
-                    <Section
-                        title="Fechas"
-                        subtitle="Fechas de resolución y ejecución"
-                    >
-                        <div className="grid grid-cols-2 gap-6">
-                            <div>
-                                <Label label="Fecha de resolución" />
-                                <Input
-                                    value={resolutionDate}
-                                    name="resolutionDate"
-                                    onChange={onChange}
-                                    type="datetime-local"
-                                    step="1"
-                                />
-                            </div>
-                            <div>
-                                <Label label="Fecha y hora de ejecución" />
-                                <Input
-                                    value={executionDate}
-                                    name="executionDate"
-                                    onChange={onChange}
-                                    type="datetime-local"
-                                    step="1"
-                                />
-                            </div>
-                        </div>
-                    </Section>
-
-                    <Section
-                        title="Área de SUA"
-                        subtitle="Área a la que se aplica la resolución"
-                    >
-                        <Select
-                            name="idArea"
-                            value={idArea}
-                            onChange={onChange}
-                            options={AREAS}
-                        />
-                    </Section>
-
-                    <Section
-                        title="Archivo CSV"
-                        subtitle="Cargá el archivo con los registros a procesar"
-                    >
-                        <CsvProcessor
-                            fileInputId="res-file-upload"
-                            errores={errors}
-                            file={resFile}
-                            handleDescargarErrores={handleResDescargarErrores}
-                            handleFileChange={handleResFileChange}
-                            handleParse={handleResParse}
-                            jsonData={resJsonData}
-                            headers={resHeaders}
-                            status={resStatus}
-                            handleProcessAPI={handleResProcessAPI}
-                            rowStatus={resRowStatus}
-                        />
-                    </Section>
-                </>
-            )}
-
-            {/* ── DERIVACIONES ── */}
-            {activeTab === "derivaciones" && (
-                <>
-                    <Section
-                        title="Leyenda"
-                        subtitle="Texto descriptivo de la derivación"
-                    >
-                        <TextArea
-                            name="legend"
-                            onChange={onChange}
-                            placeholder="Escribe aquí la derivación..."
-                            value={legend}
-                        />
-                    </Section>
-
-                    <Section
-                        title="Fechas"
-                        subtitle="Fechas de derivación y ejecución"
-                    >
-                        <div className="grid grid-cols-2 gap-6">
-                            <div>
-                                <Label label="Fecha de derivación" />
-                                <Input
-                                    value={resolutionDate}
-                                    name="resolutionDate"
-                                    onChange={onChange}
-                                    type="datetime-local"
-                                    step="1"
-                                />
-                            </div>
-                            <div>
-                                <Label label="Fecha y hora de ejecución" />
-                                <Input
-                                    value={executionDate}
-                                    name="executionDate"
-                                    onChange={onChange}
-                                    type="datetime-local"
-                                    step="1"
-                                />
-                            </div>
-                        </div>
-                    </Section>
-
-                    <Section
-                        title="Áreas"
-                        subtitle="Área de origen y área de destino de la derivación"
-                    >
-                        <div className="grid grid-cols-2 gap-6">
-                            <div>
-                                <Label label="Área de origen" />
-                                <Select
-                                    name="idArea"
-                                    value={idArea}
-                                    onChange={onChange}
-                                    options={AREAS}
-                                />
-                            </div>
-                            <div>
-                                <Label label="Área de destino" />
-                                <Select
-                                    name="idAreaDerivada"
-                                    value={idAreaDerivada}
-                                    onChange={(e) =>
-                                        setIdAreaDerivada(e.target.value)
-                                    }
-                                    options={AREAS}
-                                />
-                            </div>
-                        </div>
-                    </Section>
-
-                    <Section
-                        title="Archivo CSV"
-                        subtitle="Cargá el archivo con los registros a derivar"
-                    >
-                        <CsvProcessor
-                            fileInputId="der-file-upload"
-                            errores={errors}
-                            file={derFile}
-                            handleDescargarErrores={handleDerDescargarErrores}
-                            handleFileChange={handleDerFileChange}
-                            handleParse={handleDerParse}
-                            jsonData={derJsonData}
-                            headers={derHeaders}
-                            status={derStatus}
-                            handleProcessAPI={handleDerProcessAPI}
-                            rowStatus={derRowStatus}
-                        />
-                    </Section>
-                </>
-            )}
-        </div>
+    return (
+        <Page
+            title="Gestión SUA"
+            description="Resolución o derivación masiva de solicitudes a partir de un CSV."
+            hero={
+                <Tabs
+                    dark
+                    label="Tipo de proceso"
+                    value={activeTab}
+                    onChange={setActiveTab}
+                    tabs={TABS.map((t) => ({ value: t.id, label: t.label }))}
+                />
+            }
+        >
+            {/* key: cada pestaña mantiene su propio estado y se reinicia al cambiar */}
+            <ProcessForm key={activeTab} type={activeTab} />
+        </Page>
     );
 };
 

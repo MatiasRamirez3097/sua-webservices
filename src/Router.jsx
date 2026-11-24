@@ -1,40 +1,37 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
 import { createBrowserRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
+import { Navigate } from "react-router";
 import Layout from "./layout/Layout";
 import { EstadoCargas, Home, GestionSua, Rodados, Usuarios } from "./pages";
 import { ProtectedRoute } from "./components";
+import { PERM } from "./utils/access";
 
 const router = createBrowserRouter([
     {
         path: "/",
         element: <Layout />,
         children: [
-            {
-                path: "/",
-                element: <Home />,
-            },
+            { index: true, element: <Navigate to="/home" replace /> },
             {
                 path: "/home",
                 element: <Home />,
             },
             {
-                element: <ProtectedRoute module="rodados" />,
+                element: <ProtectedRoute perms={[PERM.RODADOS_SOLICITAR, PERM.RODADOS_VER_TODO]} />,
                 children: [{ path: "/rodados", element: <Rodados /> }],
             },
             {
-                element: <ProtectedRoute module="estadocargas" />,
+                element: <ProtectedRoute perms={[PERM.LOTES_VER]} />,
                 children: [
                     { path: "/estadocargas", element: <EstadoCargas /> },
                 ],
             },
             {
-                element: <ProtectedRoute module="gestionsua" />,
+                element: <ProtectedRoute perms={[PERM.LOTES_CREAR]} />,
                 children: [{ path: "/gestionsua", element: <GestionSua /> }],
             },
             {
-                element: <ProtectedRoute adminOnly />,
+                element: <ProtectedRoute perms={[PERM.USUARIOS_ADMINISTRAR]} />,
                 children: [{ path: "/usuarios", element: <Usuarios /> }],
             },
         ],

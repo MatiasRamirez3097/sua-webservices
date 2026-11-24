@@ -1,26 +1,18 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { server } from "../../../Api.jsx";
-import { ls } from "../../../utils/ls.js";
+import { apiErrorMessage, server } from "../../../Api.jsx";
+
+// El token lo agrega el interceptor de Api.jsx
 
 export const getUsers = createAsyncThunk(
     "users/getUsers",
     async (_, { rejectWithValue }) => {
         try {
-            const token = ls.getText("token");
-
-            const res = await server.get("/users", {
-                headers: {
-                    Authorization: "Bearer " + token,
-                },
-            });
-            console.log(res);
+            const res = await server.get("/users");
             return res.data.response;
         } catch (error) {
-            return rejectWithValue(
-                error.response?.data?.message || error.message
-            );
+            return rejectWithValue(apiErrorMessage(error));
         }
-    }
+    },
 );
 
 export const createUser = createAsyncThunk(
@@ -28,79 +20,48 @@ export const createUser = createAsyncThunk(
     async (userData, { rejectWithValue }) => {
         try {
             const { data } = await server.post("/users/create", userData);
-            return {
-                ...data.response,
-            };
+            if (!data.success) return rejectWithValue(apiErrorMessage({ response: { data } }));
+            return data.response;
         } catch (error) {
-            return rejectWithValue(
-                error.response?.data || "Error al crear usuario"
-            );
+            return rejectWithValue(apiErrorMessage(error, "Error al crear usuario"));
         }
-    }
+    },
 );
 
 export const deleteUser = createAsyncThunk(
     "users/deleteUser",
-    async (id, thunkAPI) => {
-        console.log("➡️ BASE URL:", server.defaults.baseURL);
-        console.log("➡️ FULL REQUEST:", `/users/softdelete/${id}`);
+    async (id, { rejectWithValue }) => {
         try {
-            const token = ls.getText("token");
-
-            const res = await server.put(
-                `/users/softdelete/${id}`,
-                {},
-                {
-                    headers: {
-                        Authorization: "Bearer " + token,
-                    },
-                }
-            );
-
+            await server.put(`/users/softdelete/${id}`);
             return id;
         } catch (error) {
-            console.log("❌ ERROR AL BORRAR:", error);
-            return thunkAPI.rejectWithValue(
-                error.response?.data || "Error al eliminar usuario"
-            );
+            return rejectWithValue(apiErrorMessage(error, "Error al eliminar usuario"));
         }
-    }
+    },
 );
 
 export const updateUser = createAsyncThunk(
     "users/updateUser",
-    async ({ id, data }, thunkAPI) => {
+    async ({ id, data }, { rejectWithValue }) => {
         try {
             const res = await server.put(`/users/update/${id}`, data);
-            return res.data.response; // Devuelve el usuario actualizado
+            if (!res.data.success)
+                return rejectWithValue(apiErrorMessage({ response: res }));
+            return res.data.response;
         } catch (error) {
-            return thunkAPI.rejectWithValue(
-                error.response?.data || "Error al actualizar usuario"
-            );
+            return rejectWithValue(apiErrorMessage(error, "Error al actualizar usuario"));
         }
-    }
+    },
 );
 
 const userSlice = createSlice({
     name: "users",
-
     initialState: {
         list: [],
-        token: null,
-        user: {},
-        status: "offline",
         error: null,
-        loadingUsers: false,
-        loadingCreate: false,
         loading: false,
     },
-
-    reducers: {
-        setUser: (state, action) => {
-            state.user = action.payload;
-        },
-    },
-
+    reducers: {},
     extraReducers: (builder) => {
         builder
             .addCase(getUsers.pending, (state) => {
@@ -109,22 +70,25 @@ const userSlice = createSlice({
             })
             .addCase(getUsers.fulfilled, (state, action) => {
                 state.loading = false;
-                state.list = action.payload;
+                state.list = action.payload || [];
             })
             .addCase(getUsers.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
-            .addCase(updateUser.pending, (state, action) => {
+            .addCase(updateUser.pending, (state) => {
                 state.loading = true;
             })
-            .addCase(updateUser.fulfilled, (state, action) => {
+            .addCase(updateUser.fulfilled, (state) => {
                 state.loading = false;
-                state.error = false;
+                state.error = null;
             })
             .addCase(updateUser.rejected, (state, action) => {
                 state.loading = false;
-                state.error = true;
+                state.error = action.payload;
+            })
+            .addCase(deleteUser.fulfilled, (state, action) => {
+                state.list = state.list.filter((u) => u._id !== action.payload);
             });
     },
 });
